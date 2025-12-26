@@ -1,0 +1,11 @@
+{
+  "name": "elixir-architectural-thinking",
+  "version": "1.0.0",
+  "description": "Paradigm-shifting insights for Elixir architecture: processes, polymorphism, and BEAM patterns",
+  "author": {
+    "name": "George Guimaraes"
+  },
+  "homepage": "https://github.com/georgeguimaraes/claude-code-elixir",
+  "license": "Apache-2.0",
+  "keywords": ["elixir", "architecture", "otp", "beam", "patterns", "genserver"]
+}
