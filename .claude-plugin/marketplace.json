@@ -1,0 +1,21 @@
+{
+  "name": "claude-code-elixir",
+  "owner": {
+    "name": "George Guimaraes"
+  },
+  "metadata": {
+    "description": "Claude Code plugins for Elixir development",
+    "homepage": "https://github.com/georgeguimaraes/claude-code-elixir",
+    "pluginRoot": "./plugins"
+  },
+  "plugins": [
+    {
+      "name": "elixir-lsp",
+      "source": "./plugins/elixir-lsp"
+    },
+    {
+      "name": "mix-format",
+      "source": "./plugins/mix-format"
+    }
+  ]
+}

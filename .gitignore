@@ -1,0 +1,12 @@
+# Elixir build artifacts
+_build/
+deps/
+.elixir_ls/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor files
+*.swp
+*~

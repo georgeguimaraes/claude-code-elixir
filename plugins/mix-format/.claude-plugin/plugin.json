@@ -1,0 +1,12 @@
+{
+  "name": "mix-format",
+  "version": "1.0.0",
+  "description": "Auto-format Elixir files with mix format after edits",
+  "author": {
+    "name": "George Guimaraes"
+  },
+  "homepage": "https://github.com/georgeguimaraes/claude-code-elixir",
+  "license": "Apache-2.0",
+  "keywords": ["elixir", "mix-format", "formatter"],
+  "hooks": "./hooks/hooks.json"
+}
