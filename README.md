@@ -36,7 +36,7 @@ claude plugins install otp-thinking@claude-code-elixir
 
 | Plugin | Type | Description |
 |--------|------|-------------|
-| [elixir-lsp](#elixir-lsp) | MCP | Language Server with completions, go-to-definition, Dialyzer |
+| [elixir-lsp](#elixir-lsp) | LSP | Language Server with completions, go-to-definition, Dialyzer |
 | [mix-format](#mix-format) | Hook | Auto-format `.ex`/`.exs` files on save |
 | [mix-compile](#mix-compile) | Hook | Compile with `--warnings-as-errors` on save |
 | [elixir-architectural-thinking](#elixir-architectural-thinking) | Skill | BEAM/process mental models |
