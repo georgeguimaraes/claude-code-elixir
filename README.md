@@ -11,11 +11,11 @@ claude plugin marketplace add georgeguimaraes/claude-code-elixir
 Install all plugins:
 
 ```bash
-claude plugin install elixir-lsp@claude-code-elixir
-claude plugin install mix-format@claude-code-elixir
-claude plugin install mix-compile@claude-code-elixir
-claude plugin install elixir-architectural-thinking@claude-code-elixir
-claude plugin install phoenix-ecto-thinking@claude-code-elixir
+claude plugin install elixir-lsp@claude-code-elixir && \
+claude plugin install mix-format@claude-code-elixir && \
+claude plugin install mix-compile@claude-code-elixir && \
+claude plugin install elixir-architectural-thinking@claude-code-elixir && \
+claude plugin install phoenix-ecto-thinking@claude-code-elixir && \
 claude plugin install otp-thinking@claude-code-elixir
 ```
 
