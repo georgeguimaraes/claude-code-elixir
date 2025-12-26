@@ -4,13 +4,11 @@ Claude Code plugins for Elixir development.
 
 ## Installation
 
-Add the marketplace:
-
 ```bash
 claude plugins marketplace add georgeguimaraes/claude-code-elixir
 ```
 
-Install plugins:
+Install all plugins:
 
 ```bash
 claude plugins install elixir-lsp@claude-code-elixir
@@ -23,32 +21,45 @@ claude plugins install otp-thinking@claude-code-elixir
 
 ## Prerequisites
 
-**macOS:**
-```bash
-brew install elixir elixir-ls
-```
+| Platform | Command |
+|----------|---------|
+| macOS | `brew install elixir elixir-ls` |
+| Windows | `choco install elixir elixir-ls` |
 
-**Windows:**
-```powershell
-choco install elixir elixir-ls
-```
+> **Note:** `mix-format` and `mix-compile` require bash (Git Bash or WSL on Windows).
 
-> **Note:** The `mix-format` and `mix-compile` plugins require a bash environment (Git Bash, WSL). The `elixir-lsp` plugin works natively on Windows.
+---
 
 ## Plugins
 
-### elixir-lsp
+### Overview
+
+| Plugin | Type | Description |
+|--------|------|-------------|
+| [elixir-lsp](#elixir-lsp) | MCP | Language Server with completions, go-to-definition, Dialyzer |
+| [mix-format](#mix-format) | Hook | Auto-format `.ex`/`.exs` files on save |
+| [mix-compile](#mix-compile) | Hook | Compile with `--warnings-as-errors` on save |
+| [elixir-architectural-thinking](#elixir-architectural-thinking) | Skill | BEAM/process mental models |
+| [phoenix-ecto-thinking](#phoenix-ecto-thinking) | Skill | Phoenix Scopes, Contexts, LiveView patterns |
+| [otp-thinking](#otp-thinking) | Skill | GenServer, supervision, ETS patterns |
+
+---
+
+### Tools
+
+#### elixir-lsp
 
 Elixir Language Server integration powered by [elixir-ls](https://github.com/elixir-lsp/elixir-ls).
 
-**Features:**
-- Go to definition, find references, hover documentation
-- Completions with signature help
-- Dialyzer diagnostics
+| Feature | Description |
+|---------|-------------|
+| Navigation | Go to definition, find references |
+| Completions | With signature help and docs |
+| Diagnostics | Dialyzer type checking |
+| File types | `.ex`, `.exs`, `.heex`, `.leex` |
 
-**Supported files:** `.ex`, `.exs`, `.heex`, `.leex`
-
-**Default settings:**
+<details>
+<summary>Default settings</summary>
 
 | Option | Default | Description |
 |--------|---------|-------------|
@@ -56,75 +67,95 @@ Elixir Language Server integration powered by [elixir-ls](https://github.com/eli
 | `fetchDeps` | `false` | Auto-fetch deps on compile |
 | `suggestSpecs` | `true` | Suggest @spec annotations |
 
-For project-specific settings, create `.elixir_ls/settings.json` in your project root.
+Override per-project: `.elixir_ls/settings.json`
 
-### mix-format
+</details>
 
-Automatically runs `mix format` after editing `.ex` and `.exs` files.
+#### mix-format
 
-### mix-compile
+Auto-runs `mix format` after editing `.ex` and `.exs` files.
 
-Runs `mix compile --warnings-as-errors` after editing `.ex` files. Catches compiler warnings and errors immediately.
+#### mix-compile
 
-**Notes:**
-- Only runs on `.ex` files (not `.exs` scripts/tests)
-- Finds `mix.exs` by walking up from the edited file
-- 60-second timeout for large projects
-- Fails the hook if compilation errors or warnings occur
+Auto-runs `mix compile --warnings-as-errors` after editing `.ex` files.
 
-### elixir-architectural-thinking
+- Only `.ex` files (not `.exs` scripts/tests)
+- Finds `mix.exs` by walking up directories
+- Fails on warnings or errors
 
-Architectural thinking skill for writing Elixir code. Contains paradigm-shifting insights about processes, polymorphism, and the BEAM runtime that differ from OOP thinking.
+---
 
-**Key concepts:**
-- Three decoupled dimensions (behavior, state, mutability)
-- Processes are for runtime, NOT organization
-- "Let It Crash" = "Let It Heal"
-- Rule of least expressiveness
-- Data modeling replaces class hierarchies
+### Skills
 
-**Sources:**
-- [José Valim - Gang of None: Patterns of the Functional Mind](https://www.youtube.com/watch?v=4yAaHV9wQE4)
+#### elixir-architectural-thinking
+
+Mental models for writing Elixir — how it differs from OOP.
+
+| Concept | Insight |
+|---------|---------|
+| Three dimensions | Behavior, state, mutability are **decoupled** |
+| Processes | For runtime (state/concurrency/faults), **not** code organization |
+| "Let it crash" | Means "let it **heal**" — supervisors restart |
+| Polymorphism | Behaviors → Protocols → Message passing (least to most dynamic) |
+| Data modeling | Tuples + pattern matching replace class hierarchies |
+
+<details>
+<summary>Sources</summary>
+
+- [José Valim - Gang of None](https://www.youtube.com/watch?v=4yAaHV9wQE4)
 - [Saša Jurić - The Soul of Erlang and Elixir](https://www.youtube.com/watch?v=JvBT4XBdoUE)
-- [Saša Jurić - Clarity (Code BEAM SF 2020)](https://www.youtube.com/watch?v=6sNmJtoKDCo)
-- [Designing Elixir Systems with OTP](https://pragprog.com/titles/jgotp/designing-elixir-systems-with-otp/) by James Edward Gray II and Bruce Tate
+- [Saša Jurić - Clarity](https://www.youtube.com/watch?v=6sNmJtoKDCo)
+- [Designing Elixir Systems with OTP](https://pragprog.com/titles/jgotp/designing-elixir-systems-with-otp/)
 - [Official Elixir Guides](https://elixir-lang.org/getting-started/)
 
-### phoenix-ecto-thinking
+</details>
 
-Architectural thinking skill for Phoenix/Ecto code. Contains insights about Scopes, Contexts, LiveView lifecycle, and DDD patterns.
+#### phoenix-ecto-thinking
 
-**Key concepts:**
-- Scopes (Phoenix 1.8+) for security-first patterns
-- mount/3 vs handle_params/3 (avoid duplicate queries)
-- Contexts as bounded domains with dialects
-- Cross-context references via IDs, not associations
-- PubSub topics must be scoped for multi-tenancy
+Architectural patterns for Phoenix and Ecto.
 
-**Sources:**
-- [Phoenix 1.8 Scopes Documentation](https://hexdocs.pm/phoenix/scopes.html)
+| Concept | Insight |
+|---------|---------|
+| Scopes (1.8+) | Security-first authorization threading |
+| mount vs handle_params | mount = setup, handle_params = data (avoid duplicate queries) |
+| Contexts | Bounded domains with their own "dialect" |
+| Cross-context refs | Use IDs, not `belongs_to` associations |
+| PubSub | Topics **must** be scoped for multi-tenancy |
+
+<details>
+<summary>Sources</summary>
+
+- [Phoenix 1.8 Scopes](https://hexdocs.pm/phoenix/scopes.html)
 - [Phoenix Contexts Guide](https://hexdocs.pm/phoenix/contexts.html)
-- [German Velasco - DDD Concepts for Phoenix Contexts](https://www.youtube.com/watch?v=mSgZ2LJXfew) (ElixirConf 2024)
+- [German Velasco - DDD for Phoenix Contexts](https://www.youtube.com/watch?v=mSgZ2LJXfew) (ElixirConf 2024)
 - [Ecto Multi-Tenancy Guide](https://hexdocs.pm/ecto/multi-tenancy-with-query-prefixes.html)
 
-### otp-thinking
+</details>
 
-OTP design patterns skill. Contains insights about GenServer bottlenecks, supervision patterns, ETS caching, and choosing between OTP abstractions.
+#### otp-thinking
 
-**Key concepts:**
-- GenServer is a bottleneck BY DESIGN (processes ONE message at a time)
-- ETS bypasses the bottleneck (concurrent reads)
-- Task.Supervisor.async is THE pattern
-- Registry + DynamicSupervisor = named dynamic processes
-- Broadway vs Oban: different problems (external queues vs background jobs)
+OTP design patterns and when to use each abstraction.
 
-**Sources:**
+| Concept | Insight |
+|---------|---------|
+| GenServer | Bottleneck **by design** — processes ONE message at a time |
+| ETS | Bypasses bottleneck — concurrent reads with `:read_concurrency` |
+| Task.Supervisor | THE pattern for async work (not raw `Task.async`) |
+| Registry + DynamicSupervisor | Named dynamic processes without atom leaks |
+| Broadway vs Oban | External queues vs background jobs — different problems |
+
+<details>
+<summary>Sources</summary>
+
 - [Erlang OTP Design Principles](https://www.erlang.org/doc/system/design_principles.html)
-- [Elixir GenServer Documentation](https://hexdocs.pm/elixir/GenServer.html)
+- [Elixir GenServer Docs](https://hexdocs.pm/elixir/GenServer.html)
 - [Elixir School - OTP Concurrency](https://elixirschool.com/en/lessons/advanced/otp_concurrency)
 - [Saša Jurić - Elixir in Action](https://www.manning.com/books/elixir-in-action-third-edition)
-- [Cogini Blog - GenServer Bottleneck Pattern](https://www.cogini.com/blog/)
 - [Stephen Bussey - Real-Time Phoenix](https://pragprog.com/titles/sbsockets/real-time-phoenix/)
+
+</details>
+
+---
 
 ## Troubleshooting
 
