@@ -14,28 +14,16 @@
       "source": "./plugins/elixir-lsp"
     },
     {
-      "name": "mix-format",
-      "source": "./plugins/mix-format"
+      "name": "elixir-thinking",
+      "source": "./plugins/elixir-thinking"
     },
     {
       "name": "mix-compile",
       "source": "./plugins/mix-compile"
     },
     {
-      "name": "elixir-architectural-thinking",
-      "source": "./plugins/elixir-architectural-thinking"
-    },
-    {
-      "name": "phoenix-ecto-thinking",
-      "source": "./plugins/phoenix-ecto-thinking"
-    },
-    {
-      "name": "otp-thinking",
-      "source": "./plugins/otp-thinking"
-    },
-    {
-      "name": "elixir-skill-awareness",
-      "source": "./plugins/elixir-skill-awareness"
+      "name": "mix-format",
+      "source": "./plugins/mix-format"
     }
   ]
 }
