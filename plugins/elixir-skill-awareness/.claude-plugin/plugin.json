@@ -1,6 +1,6 @@
 {
   "name": "elixir-skill-awareness",
-  "version": "1.0.2",
+  "version": "1.1.0",
   "description": "Automatically suggests Elixir thinking skills when working on Elixir code",
   "author": {
     "name": "George Guimarães"

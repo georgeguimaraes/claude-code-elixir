@@ -7,6 +7,24 @@ description: Use when writing Phoenix/Ecto code. Contains insights about Scopes,
 
 Mental shifts for Phoenix applications. These insights challenge typical web framework patterns.
 
+## The Iron Law
+
+```
+NO DATABASE QUERIES IN MOUNT
+```
+
+mount/3 is called TWICE (HTTP request + WebSocket connection). Queries in mount = duplicate queries.
+
+**The pattern:**
+- `mount/3` = setup only (empty assigns, subscriptions, defaults)
+- `handle_params/3` = data loading (all database queries)
+
+**No exceptions:**
+- Don't query "just this one small thing" in mount
+- Don't "optimize later"
+- Don't assume mount is called once
+- LiveView lifecycle is non-negotiable
+
 ## Scopes: Security-First Pattern (Phoenix 1.8+)
 
 Scopes address OWASP #1 vulnerability: Broken Access Control.
@@ -242,3 +260,30 @@ Use generators for simple cases. Only add factory/aggregate/repository when busi
 | Join preloads | Belongs-to, has-one (single query) |
 
 Join preloads can use 10x more memory for has-many.
+
+## Common Rationalizations
+
+| Excuse | Reality |
+|--------|---------|
+| "I'll query in mount, it's simpler" | mount is called twice. Use handle_params. |
+| "This app is too small for contexts" | Contexts are about meaning, not size. |
+| "I'll just use belongs_to across contexts" | Cross-context = IDs only. Keeps contexts independent. |
+| "One schema per table is cleaner" | Multiple schemas per table is valid. Different views = different schemas. |
+| "I don't need Scopes for this" | Scopes prevent OWASP #1. Use them. |
+| "Preloading everything is easier" | Join preloads can use 10x memory. Think about it. |
+| "PubSub topics don't need scoping" | Unscoped topics = data leaks. Always scope. |
+| "LiveView can poll the external API" | One GenServer polls, broadcasts to all. Don't multiply requests. |
+| "I'll add contexts later" | Refactoring contexts is painful. Design upfront. |
+| "CRUD doesn't need DDD" | CRUD contexts are fine. DDD is optional complexity. |
+
+## Red Flags - STOP and Reconsider
+
+- Database query in mount/3
+- belongs_to pointing to another context's schema
+- Unscoped PubSub topics in multi-tenant app
+- LiveView polling external APIs directly
+- Single changeset for all operations
+- Preloading has-many with join
+- Skipping Scopes "for simplicity"
+
+**Any of these? Re-read The Iron Law and the relevant section.**

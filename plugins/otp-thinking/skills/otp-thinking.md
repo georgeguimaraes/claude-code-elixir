@@ -7,9 +7,25 @@ description: Use when writing OTP code in Elixir. Contains insights about GenSer
 
 Paradigm shifts for OTP design. These insights challenge typical concurrency and state management patterns.
 
-## GenServer Is a Bottleneck BY DESIGN
+## The Iron Law
+
+```
+GENSERVER IS A BOTTLENECK BY DESIGN
+```
 
 A GenServer processes ONE message at a time. This is intentional—it serializes access.
+
+**Before creating a GenServer, ask:**
+1. Do I actually need serialized access?
+2. Will this become a throughput bottleneck?
+3. Can reads bypass the GenServer via ETS?
+
+**The ETS pattern:** GenServer owns ETS table, writes serialize through GenServer, reads bypass it entirely.
+
+**No exceptions:**
+- Don't wrap stateless functions in GenServer
+- Don't create GenServer "for organization"
+- Don't assume "it's fine for now"—design for load
 
 **The Calculator Anti-Pattern:**
 ```elixir
@@ -264,3 +280,31 @@ Phoenix, Ecto, and most libraries emit telemetry events. Attach handlers:
 ```
 
 Use Telemetry.Metrics + reporters (StatsD, Prometheus, LiveDashboard).
+
+## Common Rationalizations
+
+| Excuse | Reality |
+|--------|---------|
+| "GenServer is the Elixir way" | GenServer is ONE tool. It's a bottleneck by design. |
+| "Task.async is simpler" | Task.Supervisor.async is THE recommended pattern. |
+| "I'll add ETS later if needed" | Design for load now. Retrofitting is harder. |
+| "DynamicSupervisor needs strategies" | DynamicSupervisor only supports :one_for_one. That's fine. |
+| "I need atoms for process names" | Registry exists. Never create atoms dynamically. |
+| "Oban is overkill, I'll use Broadway" | Different tools. Oban = jobs, Broadway = external queues. |
+| "I'll use :pg2 for distribution" | :pg2 is deprecated. Use :pg. |
+| "Poolboy for everything" | Pools are for limited resources. Most things don't need pools. |
+| "I need a process per user" | Only if you need state/concurrency/isolation per user. |
+| "Agent is too simple" | Agent IS GenServer. Extract when you need callbacks. |
+
+## Red Flags - STOP and Reconsider
+
+- GenServer wrapping stateless computation
+- Task.async without supervision
+- Creating atoms dynamically for process names
+- Single GenServer becoming throughput bottleneck
+- Using Broadway for background jobs (use Oban)
+- Using Oban for external queue consumption (use Broadway)
+- Skipping the decision tree for OTP abstractions
+- No supervision strategy reasoning
+
+**Any of these? Re-read The Iron Law and use the Abstraction Decision Tree.**

@@ -3,9 +3,17 @@ name: using-elixir-skills
 description: Guides when to invoke Elixir thinking skills during development
 ---
 
+<EXTREMELY-IMPORTANT>
+If you are writing Elixir, Phoenix, or OTP code, you MUST invoke the relevant skill BEFORE writing any code.
+
+THIS IS NOT OPTIONAL. Elixir's paradigm is fundamentally different from OOP. Without these skills, you WILL write anti-patterns.
+
+You cannot rationalize your way out of this. "I know Elixir" is not an excuse—these skills contain paradigm shifts that even experienced developers miss.
+</EXTREMELY-IMPORTANT>
+
 # Elixir Skills Awareness
 
-When working on Elixir, Phoenix, or OTP code, check if any of these skills apply before writing code.
+When working on Elixir, Phoenix, or OTP code, invoke the relevant skill BEFORE writing code.
 
 ## Available Skills
 
@@ -84,3 +92,29 @@ Skill tool: otp-thinking
 ```
 
 The skill content will guide your approach before writing code.
+
+## Red Flags
+
+These thoughts mean STOP—you're rationalizing:
+
+| Thought | Reality |
+|---------|---------|
+| "I know Elixir well enough" | These skills contain paradigm shifts. Read them. |
+| "This is just a simple module" | Simple code becomes complex. Check skills first. |
+| "I'll add a process to organize this" | Processes are for runtime, not organization. Read the skill. |
+| "I'll use patterns from other languages" | OOP patterns create anti-patterns in Elixir. Read the skill. |
+| "GenServer is the Elixir way" | GenServer is a bottleneck by design. Read the skill. |
+| "I'll query in mount, it's cleaner" | mount is called twice. Read the skill. |
+| "I don't need contexts for this" | Contexts are about meaning, not size. Read the skill. |
+| "Task.async is simpler" | Task.Supervisor.async is THE pattern. Read the skill. |
+| "I'll figure it out as I go" | Elixir rewards upfront design. Read the skill first. |
+| "This is obvious" | If it were obvious, these skills wouldn't exist. |
+
+## The Rule
+
+```
+Elixir/Phoenix/OTP code → Invoke skill FIRST → Then write code
+Otherwise → You're writing OOP in Elixir syntax
+```
+
+No exceptions without your human partner's permission.

@@ -7,6 +7,25 @@ description: Use when writing Elixir code. Contains paradigm-shifting insights a
 
 Mental shifts required before writing Elixir. These insights contradict conventional OOP patterns.
 
+## The Iron Law
+
+```
+NO PROCESS WITHOUT A RUNTIME REASON
+```
+
+Before creating a GenServer, Agent, or any process, answer YES to at least one:
+1. Do I need mutable state persisting across calls?
+2. Do I need concurrent execution?
+3. Do I need fault isolation?
+
+**All three are NO?** Use plain functions. Delete the process. Start over.
+
+**No exceptions:**
+- Don't create a process "for organization"
+- Don't create a process "to group related functions"
+- Don't create a process "because that's how I'd do it in OOP"
+- Modules organize code. Processes manage runtime.
+
 ## The Three Decoupled Dimensions
 
 **In OOP, objects couple three things together:**
@@ -205,3 +224,30 @@ Each layer independently testable and composable.
 - **Supervisor** — Fault tolerance
 
 Many design patterns are built into the language.
+
+## Common Rationalizations
+
+| Excuse | Reality |
+|--------|---------|
+| "I need a process to organize this code" | Modules organize code. Processes are for runtime. |
+| "GenServer is the Elixir way" | GenServer is ONE tool. Plain functions are also the Elixir way. |
+| "I'll need state eventually" | YAGNI. Add process when you need it, not before. |
+| "It's just a simple wrapper process" | Simple wrappers become bottlenecks. Use functions. |
+| "This is how I'd structure it in OOP" | OOP patterns don't translate. Rethink from data flow. |
+| "I need a singleton" | You probably need a module with functions. |
+| "Behaviors require a process" | Behaviors define callbacks. Many don't need processes. |
+| "I want to encapsulate this" | Modules encapsulate. Processes add runtime overhead. |
+| "It feels more structured" | Structure comes from data design, not processes. |
+| "Let it crash means I need processes" | Let it crash means supervisors restart. Functions can crash too. |
+
+## Red Flags - STOP and Reconsider
+
+- Creating process without answering the three questions
+- Using GenServer for stateless operations
+- Wrapping a library in a process "for safety"
+- One process per entity without runtime justification
+- Reaching for protocols when pattern matching works
+- Adding behaviors for single implementations
+- Complex class hierarchy thinking
+
+**Any of these? Re-read The Iron Law.**
