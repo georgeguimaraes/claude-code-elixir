@@ -67,24 +67,45 @@ end
 
 `:read_concurrency` optimizes for concurrent reads. This is THE solution to GenServer bottlenecks.
 
-## Task.Supervisor.async Is THE Pattern
+## Task.async vs Task.Supervisor
 
-Not `Task.async`. The supervised version is recommended:
+`Task.async` spawns a **linked** process. If the task crashes, your caller crashes too.
+
+```elixir
+# Task.async - linked, no supervision
+task = Task.async(fn -> might_fail() end)
+# If might_fail() raises, YOUR process crashes too
+```
+
+**Task.Supervisor gives you options:**
+
+| Pattern | On task crash |
+|---------|---------------|
+| `Task.async/1` | Caller crashes (linked, unsupervised) |
+| `Task.Supervisor.async/2` | Caller crashes (linked, supervised) |
+| `Task.Supervisor.async_nolink/2` | Caller survives, can handle error |
+
+**Why use Task.Supervisor.async over Task.async?** (Both crash the caller)
+- Graceful shutdown during deploys (receives shutdown signal)
+- Visibility in Observer (appears in supervision tree)
+- Proper `$callers` metadata in crash logs
+- Consistent with rest of codebase
+
+**When Task.async is fine:**
+- Short-lived task in non-critical path
+- You explicitly want "crash together" semantics
+- One-off scripts or IEx experimentation
+
+**The real win is async_nolink** — caller survives task failure:
 
 ```elixir
 # Supervision tree
 {Task.Supervisor, name: MyApp.TaskSupervisor}
 
-# Usage
-task = Task.Supervisor.async(MyApp.TaskSupervisor, fn ->
-  expensive_work()
+# Caller survives if task crashes
+task = Task.Supervisor.async_nolink(MyApp.TaskSupervisor, fn ->
+  might_fail()
 end)
-result = Task.await(task, 30_000)
-```
-
-**For error handling without crashing caller:**
-```elixir
-task = Task.Supervisor.async_nolink(MyApp.TaskSupervisor, fn -> might_fail() end)
 
 case Task.yield(task, 5000) || Task.shutdown(task) do
   {:ok, result} -> {:ok, result}
@@ -92,6 +113,8 @@ case Task.yield(task, 5000) || Task.shutdown(task) do
   nil -> {:error, :timeout}
 end
 ```
+
+**Bottom line:** Use `Task.Supervisor` when you need `async_nolink`, production-grade observability, or graceful shutdown. Use `Task.async` for quick experiments where crash-together is acceptable.
 
 ## DynamicSupervisor Only Supports :one_for_one
 
@@ -286,7 +309,7 @@ Use Telemetry.Metrics + reporters (StatsD, Prometheus, LiveDashboard).
 | Excuse | Reality |
 |--------|---------|
 | "GenServer is the Elixir way" | GenServer is ONE tool. It's a bottleneck by design. |
-| "Task.async is simpler" | Task.Supervisor.async is THE recommended pattern. |
+| "Task.async is simpler" | Fine for experiments. Use Task.Supervisor for async_nolink and production observability. |
 | "I'll add ETS later if needed" | Design for load now. Retrofitting is harder. |
 | "DynamicSupervisor needs strategies" | DynamicSupervisor only supports :one_for_one. That's fine. |
 | "I need atoms for process names" | Registry exists. Never create atoms dynamically. |
@@ -299,7 +322,7 @@ Use Telemetry.Metrics + reporters (StatsD, Prometheus, LiveDashboard).
 ## Red Flags - STOP and Reconsider
 
 - GenServer wrapping stateless computation
-- Task.async without supervision
+- Task.async in production when you need error handling (use async_nolink)
 - Creating atoms dynamically for process names
 - Single GenServer becoming throughput bottleneck
 - Using Broadway for background jobs (use Oban)
