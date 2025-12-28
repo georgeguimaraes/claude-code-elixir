@@ -169,6 +169,6 @@ export PATH="/opt/homebrew/bin:$PATH"
 
 ## License
 
-Copyright (c) 2025 George Guimaraes
+Copyright (c) 2025 George Guimarães
 
 Licensed under the Apache License, Version 2.0. See [LICENSE](LICENSE) for details.
