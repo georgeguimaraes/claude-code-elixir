@@ -1,13 +1,32 @@
-#!/bin/bash
+#!/usr/bin/env bash
 set -euo pipefail
 
-PLUGIN_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)"
+PLUGIN_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 
 # Read the using-elixir-skills SKILL.md
 skill_content=$(cat "${PLUGIN_ROOT}/skills/using-elixir-skills/SKILL.md" 2>&1 || echo "Error reading skill")
 
-# Escape for JSON
-skill_escaped=$(echo "$skill_content" | sed 's/\\/\\\\/g' | sed 's/"/\\"/g' | sed ':a;N;$!ba;s/\n/\\n/g')
+# Escape for JSON using pure bash (works on macOS and Linux)
+escape_for_json() {
+    local input="$1"
+    local output=""
+    local i char
+    for (( i=0; i<${#input}; i++ )); do
+        char="${input:$i:1}"
+        case "$char" in
+            $'\\') output+='\\' ;;
+            '"') output+='\"' ;;
+            $'\n') output+='\n' ;;
+            $'\r') output+='\r' ;;
+            $'\t') output+='\t' ;;
+            *) output+="$char" ;;
+        esac
+    done
+    printf '%s' "$output"
+}
+
+skill_escaped=$(escape_for_json "$skill_content")
 
 cat <<EOF
 {
@@ -17,3 +36,5 @@ cat <<EOF
   }
 }
 EOF
+
+exit 0
