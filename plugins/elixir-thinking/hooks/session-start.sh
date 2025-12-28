@@ -32,7 +32,7 @@ cat <<EOF
 {
   "hookSpecificOutput": {
     "hookEventName": "SessionStart",
-    "additionalContext": "<ELIXIR_SKILL_AWARENESS>\n${skill_escaped}\n</ELIXIR_SKILL_AWARENESS>"
+    "additionalContext": "<ELIXIR_THINKING>\n${skill_escaped}\n</ELIXIR_THINKING>"
   }
 }
 EOF

@@ -1,0 +1,21 @@
+{
+  "name": "elixir-thinking",
+  "version": "1.0.0",
+  "description": "Paradigm-shifting skills for Elixir, Phoenix, and OTP development",
+  "author": {
+    "name": "George Guimarães"
+  },
+  "homepage": "https://github.com/georgeguimaraes/claude-code-elixir",
+  "license": "Apache-2.0",
+  "keywords": [
+    "elixir",
+    "phoenix",
+    "ecto",
+    "otp",
+    "genserver",
+    "liveview",
+    "beam",
+    "architecture",
+    "patterns"
+  ]
+}

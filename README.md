@@ -14,10 +14,7 @@ Install all plugins:
 claude plugin install elixir-lsp@claude-code-elixir && \
 claude plugin install mix-format@claude-code-elixir && \
 claude plugin install mix-compile@claude-code-elixir && \
-claude plugin install elixir-architectural-thinking@claude-code-elixir && \
-claude plugin install phoenix-ecto-thinking@claude-code-elixir && \
-claude plugin install otp-thinking@claude-code-elixir && \
-claude plugin install elixir-skill-awareness@claude-code-elixir
+claude plugin install elixir-thinking@claude-code-elixir
 ```
 
 ## Prerequisites
@@ -40,10 +37,7 @@ claude plugin install elixir-skill-awareness@claude-code-elixir
 | [elixir-lsp](#elixir-lsp) | LSP | Language Server with completions, go-to-definition, Dialyzer |
 | [mix-format](#mix-format) | Hook | Auto-format `.ex`/`.exs` files on save |
 | [mix-compile](#mix-compile) | Hook | Compile with `--warnings-as-errors` on save |
-| [elixir-architectural-thinking](#elixir-architectural-thinking) | Skill | BEAM/process mental models, testing strategies |
-| [phoenix-ecto-thinking](#phoenix-ecto-thinking) | Skill | Phoenix Scopes, Contexts, LiveView patterns |
-| [otp-thinking](#otp-thinking) | Skill | GenServer, supervision, ETS patterns |
-| [elixir-skill-awareness](#elixir-skill-awareness) | Hook | Auto-suggests skills when working on Elixir code |
+| [elixir-thinking](#elixir-thinking) | Skills | BEAM architecture, Phoenix/Ecto, OTP patterns |
 
 ---
 
@@ -89,17 +83,29 @@ Auto-runs `mix compile --warnings-as-errors` after editing `.ex` files.
 
 ### Skills
 
-#### elixir-architectural-thinking
+#### elixir-thinking
+
+Paradigm-shifting skills for Elixir, Phoenix, and OTP development. Includes a SessionStart hook that auto-suggests skills when working on Elixir code.
+
+**Included skills:**
+
+| Skill | Use When |
+|-------|----------|
+| `elixir-architectural-thinking` | Designing modules, processes, data structures |
+| `phoenix-ecto-thinking` | Working with Phoenix, LiveView, Ecto, contexts |
+| `otp-thinking` | Implementing GenServers, supervisors, Tasks |
+
+##### elixir-architectural-thinking
 
 Mental models for writing Elixir — how it differs from OOP.
 
 | Concept | Insight |
 |---------|---------|
+| **Iron Law** | NO PROCESS WITHOUT A RUNTIME REASON |
 | Three dimensions | Behavior, state, mutability are **decoupled** |
 | Processes | For runtime (state/concurrency/faults), **not** code organization |
 | "Let it crash" | Means "let it **heal**" — supervisors restart |
 | Polymorphism | Behaviors → Protocols → Message passing (least to most dynamic) |
-| Data modeling | Tuples + pattern matching replace class hierarchies |
 
 <details>
 <summary>Sources</summary>
@@ -112,17 +118,17 @@ Mental models for writing Elixir — how it differs from OOP.
 
 </details>
 
-#### phoenix-ecto-thinking
+##### phoenix-ecto-thinking
 
 Architectural patterns for Phoenix and Ecto.
 
 | Concept | Insight |
 |---------|---------|
+| **Iron Law** | NO DATABASE QUERIES IN MOUNT |
 | Scopes (1.8+) | Security-first authorization threading |
-| mount vs handle_params | mount = setup, handle_params = data (avoid duplicate queries) |
+| mount vs handle_params | mount = setup, handle_params = data |
 | Contexts | Bounded domains with their own "dialect" |
 | Cross-context refs | Use IDs, not `belongs_to` associations |
-| PubSub | Topics **must** be scoped for multi-tenancy |
 
 <details>
 <summary>Sources</summary>
@@ -134,13 +140,13 @@ Architectural patterns for Phoenix and Ecto.
 
 </details>
 
-#### otp-thinking
+##### otp-thinking
 
 OTP design patterns and when to use each abstraction.
 
 | Concept | Insight |
 |---------|---------|
-| GenServer | Bottleneck **by design** — processes ONE message at a time |
+| **Iron Law** | GENSERVER IS A BOTTLENECK BY DESIGN |
 | ETS | Bypasses bottleneck — concurrent reads with `:read_concurrency` |
 | Task.Supervisor | THE pattern for async work (not raw `Task.async`) |
 | Registry + DynamicSupervisor | Named dynamic processes without atom leaks |
@@ -156,16 +162,6 @@ OTP design patterns and when to use each abstraction.
 - [Stephen Bussey - Real-Time Phoenix](https://pragprog.com/titles/sbsockets/real-time-phoenix/)
 
 </details>
-
----
-
-### Automation
-
-#### elixir-skill-awareness
-
-Injects context at session start so Claude automatically considers Elixir skills when working on Elixir code.
-
-When installed, Claude will check if `elixir-architectural-thinking`, `phoenix-ecto-thinking`, or `otp-thinking` apply before writing code, based on trigger phrases like "design", "GenServer", "LiveView", "context", etc.
 
 ---
 
