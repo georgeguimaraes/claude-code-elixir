@@ -1,5 +1,5 @@
 ---
-name: elixir-architectural-thinking
+name: elixir-thinking
 description: Use when writing Elixir code. Contains paradigm-shifting insights about processes, polymorphism, and the BEAM runtime that differ from OOP thinking.
 ---
 

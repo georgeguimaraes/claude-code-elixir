@@ -15,8 +15,8 @@
       "description": "Elixir Language Server integration for Claude Code"
     },
     {
-      "name": "elixir-thinking",
-      "source": "./plugins/elixir-thinking",
+      "name": "elixir",
+      "source": "./plugins/elixir",
       "description": "Paradigm-shifting skills for Elixir, Phoenix, and OTP development"
     },
     {

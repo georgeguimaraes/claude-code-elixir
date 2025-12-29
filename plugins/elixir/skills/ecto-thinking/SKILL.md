@@ -1,66 +1,11 @@
 ---
-name: phoenix-ecto-thinking
-description: Use when writing Phoenix/Ecto code. Contains insights about Scopes, Contexts, LiveView lifecycle, and DDD patterns that differ from typical web framework thinking.
+name: ecto-thinking
+description: Use when writing Ecto code. Contains insights about Contexts, DDD patterns, schemas, changesets, and database gotchas from José Valim.
 ---
 
-# Phoenix & Ecto Architectural Thinking
+# Ecto Architectural Thinking
 
-Mental shifts for Phoenix applications. These insights challenge typical web framework patterns.
-
-## The Iron Law
-
-```
-NO DATABASE QUERIES IN MOUNT
-```
-
-mount/3 is called TWICE (HTTP request + WebSocket connection). Queries in mount = duplicate queries.
-
-**The pattern:**
-- `mount/3` = setup only (empty assigns, subscriptions, defaults)
-- `handle_params/3` = data loading (all database queries)
-
-**No exceptions:**
-- Don't query "just this one small thing" in mount
-- Don't "optimize later"
-- Don't assume mount is called once
-- LiveView lifecycle is non-negotiable
-
-## Scopes: Security-First Pattern (Phoenix 1.8+)
-
-Scopes address OWASP #1 vulnerability: Broken Access Control.
-
-**Before 1.8:** You had to remember to scope every query (easy to forget and leak data).
-
-**With Scopes:** Authorization context is threaded automatically.
-
-```elixir
-# Scope contains user/org for every request
-def list_posts(%Scope{user: user}) do
-  Post |> where(user_id: ^user.id) |> Repo.all()
-end
-```
-
-All generators (`phx.gen.live`, etc.) automatically scope functions.
-
-## mount/3 vs handle_params/3: The Duplicate Query Problem
-
-**Critical insight:** mount is called TWICE (HTTP + WebSocket).
-
-```elixir
-def mount(_params, _session, socket) do
-  # NO database queries here! Called twice.
-  {:ok, assign(socket, posts: [], loading: true)}
-end
-
-def handle_params(params, _uri, socket) do
-  # Database queries here - once per navigation
-  posts = Blog.list_posts(socket.assigns.scope)
-  {:noreply, assign(socket, posts: posts, loading: false)}
-end
-```
-
-**mount/3 = setup** (empty assigns, subscriptions)
-**handle_params/3 = data loading** (queries, URL-driven state)
+Mental shifts for Ecto and data layer design. These insights challenge typical ORM patterns.
 
 ## Context = Setting That Changes Meaning
 
@@ -184,47 +129,6 @@ def admin_changeset(user, attrs)         # Role, verified_at
 
 Different operations = different changesets.
 
-## PubSub Topics Must Be Scoped
-
-```elixir
-def subscribe(%Scope{organization: org}) do
-  Phoenix.PubSub.subscribe(@pubsub, "posts:org:#{org.id}")
-end
-
-defp broadcast(%Scope{} = scope, event, payload) do
-  Phoenix.PubSub.broadcast(@pubsub, topic_for(scope), {event, payload})
-end
-```
-
-Unscoped topics = data leaks between tenants.
-
-## External Polling: GenServer, Not LiveView
-
-**Bad:** Every connected user makes API calls (multiplied by users).
-
-**Good:** Single GenServer polls, broadcasts to all.
-
-```elixir
-defmodule ExternalDataPoller do
-  use GenServer
-
-  def handle_info(:poll, state) do
-    data = ExternalAPI.fetch()
-    Phoenix.PubSub.broadcast(MyApp.PubSub, "external_data", {:update, data})
-    schedule_poll()
-    {:noreply, state}
-  end
-end
-```
-
-## Components Receive Data, LiveViews Own Data
-
-- **Functional components:** Display-only, no internal state
-- **LiveComponents:** Own state, handle own events
-- **LiveViews:** Full page, owns URL, top-level state
-
-> "Create functional components that depend on assigns from LiveView rather than fetching data inside components."
-
 ## Multi-Tenancy: Composite Foreign Keys
 
 ```elixir
@@ -261,29 +165,148 @@ Use generators for simple cases. Only add factory/aggregate/repository when busi
 
 Join preloads can use 10x more memory for has-many.
 
+## Gotchas from Core Team
+
+Counterintuitive behaviors documented by José Valim.
+
+### CTE Queries Don't Inherit Schema Prefix
+
+In multi-tenant apps, CTEs don't get the parent query's prefix.
+
+```elixir
+# The CTE runs in wrong schema:
+from(p in Product)
+|> with_cte("tree", as: ^recursive_query)  # recursive_query has no prefix!
+```
+
+**Fix:** Explicitly set prefix: `%{recursive_query | prefix: "tenant"}`
+
+### Mixed Keys Check Only Examines First 32 Keys
+
+`Changeset.cast` mixed keys warning only checks first 32 keys. Atom keys after position 32 slip through.
+
+```elixir
+params = %{"k1" => 1, ..., "k32" => 32, key33: 33}  # No warning!
+```
+
+**Why:** Performance—full check appeared in profiling.
+
+**Fix:** Sanitize params at controller boundary, not changeset.
+
+### Embedded Schema "Loaded" vs Primary Key
+
+Empty assocs/embeds populate based on whether struct is **loaded from DB**, not whether primary key exists.
+
+```elixir
+user = %User{id: 1}  # Manually set ID
+put_assoc(user, :posts, [])  # Doesn't work as expected
+
+user = Repo.get!(User, 1)  # Loaded from DB
+put_assoc(user, :posts, [])  # Works - struct is "loaded"
+```
+
+**Fix:** Use `Repo.load/2` if you need a "loaded" struct without DB query.
+
+### Repo.transact is Replacing transaction
+
+`Repo.transaction` is being soft-deprecated. New `transact` only allows `{:ok, _}` or `{:error, _}` returns.
+
+```elixir
+# Old - ambiguous what triggers rollback:
+Repo.transaction(fn ->
+  :something  # Does this rollback? Who knows!
+end)
+
+# New - explicit:
+Repo.transact(fn ->
+  {:ok, result}  # or {:error, reason}
+end)
+```
+
+Plan for this API change.
+
+### preload_order for Association Sorting
+
+Instead of sorting after fetch:
+
+```elixir
+schema "posts" do
+  has_many :comments, Comment, preload_order: [desc: :inserted_at]
+end
+```
+
+Note: Doesn't work for `through` associations—sort those after fetching.
+
+### Parameterized Queries ≠ Prepared Statements
+
+> "Those are separated things. One is parameterized queries the other is prepared statements."
+
+- **Parameterized queries:** `SELECT * FROM users WHERE id = $1` — always used by Ecto
+- **Prepared statements:** Query plan cached by name — can be disabled
+
+**pgbouncer compatibility:** Use `prepare: :unnamed` (disables prepared statements, keeps parameterized queries).
+
+### pool_count vs pool_size
+
+More pools with fewer connections = better for benchmarks:
+
+| pool_count | pool_size | ips |
+|------------|-----------|-----|
+| 1 | 32 | 1.53 K |
+| 8 | 4 | 2.39 K |
+
+**But:** With heterogeneous workflows (mix of fast/slow queries), a single larger pool gives better latency—you get "first available connection."
+
+**Rule:** `pool_count` for uniform workloads (benchmarks), larger `pool_size` for real apps.
+
+### Sandbox Mode Doesn't Work With External Processes
+
+Cachex, separate GenServers, or anything outside the test process won't share the sandbox transaction.
+
+> "If they need to be part of the same transaction, then you need to redesign the solution because they are not part of the same transaction in practice and the sandbox helped you find a bug."
+
+**Fix:** Make the external service use the test process, or disable sandbox for those tests.
+
+### Null Bytes Crash Postgres
+
+PostgreSQL rejects null bytes even though they're valid UTF-8:
+
+```elixir
+Repo.insert(%User{name: "foo\x00bar"})  # Raises!
+```
+
+**Fix:** Sanitize at boundaries: `String.replace(string, "\x00", "")`
+
+### Runtime Migrations Use List API
+
+For migrations at runtime (not mix tasks):
+
+```elixir
+Ecto.Migrator.run(Repo, [{0, MyApp.Migration1}, {1, MyApp.Migration2}], :up, opts)
+```
+
+Keeps migrations as compiled code, avoids module recompilation warnings.
+
 ## Common Rationalizations
 
 | Excuse | Reality |
 |--------|---------|
-| "I'll query in mount, it's simpler" | mount is called twice. Use handle_params. |
 | "This app is too small for contexts" | Contexts are about meaning, not size. |
 | "I'll just use belongs_to across contexts" | Cross-context = IDs only. Keeps contexts independent. |
 | "One schema per table is cleaner" | Multiple schemas per table is valid. Different views = different schemas. |
-| "I don't need Scopes for this" | Scopes prevent OWASP #1. Use them. |
 | "Preloading everything is easier" | Join preloads can use 10x memory. Think about it. |
-| "PubSub topics don't need scoping" | Unscoped topics = data leaks. Always scope. |
-| "LiveView can poll the external API" | One GenServer polls, broadcasts to all. Don't multiply requests. |
 | "I'll add contexts later" | Refactoring contexts is painful. Design upfront. |
 | "CRUD doesn't need DDD" | CRUD contexts are fine. DDD is optional complexity. |
 
 ## Red Flags - STOP and Reconsider
 
-- Database query in mount/3
 - belongs_to pointing to another context's schema
-- Unscoped PubSub topics in multi-tenant app
-- LiveView polling external APIs directly
 - Single changeset for all operations
 - Preloading has-many with join
-- Skipping Scopes "for simplicity"
+- CTEs in multi-tenant apps without explicit prefix
+- Trusting Changeset.cast mixed keys warning with 32+ keys
+- Using pgbouncer without `prepare: :unnamed`
+- Testing with Cachex/GenServers assuming sandbox shares transactions
+- Accepting user input without null byte sanitization
 
-**Any of these? Re-read The Iron Law and the relevant section.**
+**Any of these? Re-read the Gotchas section.**

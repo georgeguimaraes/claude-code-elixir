@@ -192,6 +192,44 @@ Standard DynamicSupervisor and Registry are node-local.
 
 Broadway is NOT a job queue. It's a data ingestion pipeline with batching and backpressure.
 
+## Broadway Gotchas from José Valim
+
+### Processors Are For Runtime, Not Code Organization
+
+> "Separation of concerns is modeled by modules, not processors. Processors are about runtime properties. Using processors for design purposes will lead to inefficient pipelines."
+
+**Wrong:** Adding processors for different message types.
+**Right:** Dispatch to different modules in `handle_message`:
+
+```elixir
+def handle_message(:default, message, _context) do
+  case message.data do
+    %{type: "order"} -> Orders.process(message)
+    %{type: "user"} -> Users.process(message)
+  end
+end
+```
+
+### one_for_all Is For Bugs, Not Business Failures
+
+Broadway's `one_for_all` supervision is for Broadway bugs, not your code:
+
+> "We rescue any failure during process. The one_for_all is really to handle bugs in Broadway which should not happen."
+
+Your `handle_message` errors are caught and result in failed messages, not supervisor restarts.
+
+### Let It Crash Is For *Unexpected* Errors
+
+> "Let it crash (max restarts) is for unexpected errors. Most producers should expect connection to be lost and be able to deal with it."
+
+**The pattern:** Handle expected failures (connection loss, rate limits) in the producer. Reserve max_restarts for unexpected bugs.
+
+### Files Auto-Cleanup on Process Exit
+
+> "Files belong to the process that create them and are automatically collected once said processes finish."
+
+Temp files created by a processor are automatically deleted when that processor finishes—you may not need explicit cleanup.
+
 ## GenStateMachine for Explicit State Machines
 
 Use `gen_statem` when you have explicit states + transitions:

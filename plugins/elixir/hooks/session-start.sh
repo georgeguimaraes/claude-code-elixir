@@ -46,7 +46,7 @@ cat <<EOF
 {
   "hookSpecificOutput": {
     "hookEventName": "SessionStart",
-    "additionalContext": "<EXTREMELY_IMPORTANT>\n${skill_escaped}\n</EXTREMELY_IMPORTANT>"
+    "additionalContext": "${skill_escaped}"
   }
 }
 EOF
