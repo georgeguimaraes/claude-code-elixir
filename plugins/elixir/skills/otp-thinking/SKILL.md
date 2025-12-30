@@ -1,9 +1,9 @@
 ---
 name: otp-thinking
-description: Use when writing OTP code in Elixir. Contains insights about GenServer bottlenecks, supervision patterns, ETS caching, and choosing between OTP abstractions that differ from typical concurrency thinking.
+description: Use when writing OTP code in Elixir. Contains insights about GenServer bottlenecks, supervision patterns, ETS caching, and choosing between OTP abstractions.
 ---
 
-# OTP Architectural Thinking
+# OTP Thinking
 
 Paradigm shifts for OTP design. These insights challenge typical concurrency and state management patterns.
 
@@ -13,71 +13,18 @@ Paradigm shifts for OTP design. These insights challenge typical concurrency and
 GENSERVER IS A BOTTLENECK BY DESIGN
 ```
 
-A GenServer processes ONE message at a time. This is intentional—it serializes access.
-
-**Before creating a GenServer, ask:**
+A GenServer processes ONE message at a time. Before creating one, ask:
 1. Do I actually need serialized access?
 2. Will this become a throughput bottleneck?
 3. Can reads bypass the GenServer via ETS?
 
-**The ETS pattern:** GenServer owns ETS table, writes serialize through GenServer, reads bypass it entirely.
+**The ETS pattern:** GenServer owns ETS table, writes serialize through GenServer, reads bypass it entirely with `:read_concurrency`.
 
-**No exceptions:**
-- Don't wrap stateless functions in GenServer
-- Don't create GenServer "for organization"
-- Don't assume "it's fine for now"—design for load
+**No exceptions:** Don't wrap stateless functions in GenServer. Don't create GenServer "for organization".
 
-**The Calculator Anti-Pattern:**
-```elixir
-# WRONG: Creates bottleneck for no reason
-defmodule Calculator do
-  use GenServer
-  def add(a, b), do: GenServer.call(__MODULE__, {:add, a, b})
-end
-```
+## Task.Supervisor, Not Task.async
 
-No state needed = no GenServer needed. Use `def add(a, b), do: a + b`.
-
-**Warning signs your GenServer is a bottleneck:**
-- Mailbox filling up (check in Observer/LiveDashboard)
-- Timeouts on calls
-- Message queue length growing
-
-## ETS Bypasses the Bottleneck
-
-The pattern: GenServer owns ETS, writes serialize through GenServer, reads bypass it entirely.
-
-```elixir
-def init(_) do
-  :ets.new(:cache, [:named_table, :public, read_concurrency: true])
-  {:ok, nil}
-end
-
-# Writes through GenServer (serialized)
-def put(key, value), do: GenServer.call(__MODULE__, {:put, key, value})
-
-# Reads bypass GenServer (concurrent!)
-def get(key) do
-  case :ets.lookup(:cache, key) do
-    [{^key, value}] -> {:ok, value}
-    [] -> :error
-  end
-end
-```
-
-`:read_concurrency` optimizes for concurrent reads. This is THE solution to GenServer bottlenecks.
-
-## Task.async vs Task.Supervisor
-
-`Task.async` spawns a **linked** process. If the task crashes, your caller crashes too.
-
-```elixir
-# Task.async - linked, no supervision
-task = Task.async(fn -> might_fail() end)
-# If might_fail() raises, YOUR process crashes too
-```
-
-**Task.Supervisor gives you options:**
+`Task.async` spawns a **linked** process—if task crashes, caller crashes too.
 
 | Pattern | On task crash |
 |---------|---------------|
@@ -85,74 +32,18 @@ task = Task.async(fn -> might_fail() end)
 | `Task.Supervisor.async/2` | Caller crashes (linked, supervised) |
 | `Task.Supervisor.async_nolink/2` | Caller survives, can handle error |
 
-**Why use Task.Supervisor.async over Task.async?** (Both crash the caller)
-- Graceful shutdown during deploys (receives shutdown signal)
-- Visibility in Observer (appears in supervision tree)
-- Proper `$callers` metadata in crash logs
-- Consistent with rest of codebase
+**Use Task.Supervisor for:** Production code, graceful shutdown, observability, `async_nolink`.
+**Use Task.async for:** Quick experiments, scripts, when crash-together is acceptable.
 
-**When Task.async is fine:**
-- Short-lived task in non-critical path
-- You explicitly want "crash together" semantics
-- One-off scripts or IEx experimentation
+## DynamicSupervisor + Registry = Named Dynamic Processes
 
-**The real win is async_nolink** — caller survives task failure:
-
-```elixir
-# Supervision tree
-{Task.Supervisor, name: MyApp.TaskSupervisor}
-
-# Caller survives if task crashes
-task = Task.Supervisor.async_nolink(MyApp.TaskSupervisor, fn ->
-  might_fail()
-end)
-
-case Task.yield(task, 5000) || Task.shutdown(task) do
-  {:ok, result} -> {:ok, result}
-  {:exit, reason} -> {:error, reason}
-  nil -> {:error, :timeout}
-end
-```
-
-**Bottom line:** Use `Task.Supervisor` when you need `async_nolink`, production-grade observability, or graceful shutdown. Use `Task.async` for quick experiments where crash-together is acceptable.
-
-## DynamicSupervisor Only Supports :one_for_one
-
-Makes sense—dynamic children have no ordering relationships.
-
-**Use DynamicSupervisor for:**
-- User sessions
-- WebSocket connections
-- Per-entity processes (chat rooms, game rooms)
-- Potentially millions of children
-
-## PartitionSupervisor Scales DynamicSupervisor
-
-When starting millions of children, single DynamicSupervisor becomes bottleneck:
-
-```elixir
-{PartitionSupervisor, child_spec: DynamicSupervisor, name: MyApp.Supervisors}
-
-# Routes by key hash
-DynamicSupervisor.start_child(
-  {:via, PartitionSupervisor, {MyApp.Supervisors, user_id}},
-  child_spec
-)
-```
-
-## Registry + DynamicSupervisor = Named Dynamic Processes
-
-Don't create atoms dynamically. Use Registry:
+DynamicSupervisor only supports `:one_for_one` (dynamic children have no ordering). Use Registry for names—never create atoms dynamically:
 
 ```elixir
 defp via_tuple(id), do: {:via, Registry, {MyApp.Registry, id}}
-
-def start_link(id) do
-  GenServer.start_link(__MODULE__, id, name: via_tuple(id))
-end
 ```
 
-Processes auto-unregister on death.
+**PartitionSupervisor** scales DynamicSupervisor for millions of children.
 
 ## :pg for Distributed, Registry for Local
 
@@ -161,125 +52,24 @@ Processes auto-unregister on death.
 | Registry | Single node | Named dynamic processes |
 | :pg | Cluster-wide | Process groups, pub/sub |
 
-`:pg` replaced `:pg2` (deprecated OTP 23). It's what Phoenix.PubSub uses.
-
-```elixir
-:pg.join(:my_scope, :room_123, self())
-members = :pg.get_members(:my_scope, :room_123)
-```
-
-## Horde for Distributed Supervisor/Registry
-
-Standard DynamicSupervisor and Registry are node-local.
-
-**Horde provides:**
-- `Horde.DynamicSupervisor` — Distributed supervisor
-- `Horde.Registry` — Distributed registry
-- CRDT-based (eventually consistent)
-- Auto-redistribution on node failure
-
-**Swarm is deprecated** — doesn't re-register processes that restart outside handoff.
+`:pg` replaced deprecated `:pg2`. **Horde** provides distributed supervisor/registry with CRDTs.
 
 ## Broadway vs Oban: Different Problems
 
 | Tool | Use For |
 |------|---------|
-| Broadway | External queues (SQS, Kafka, RabbitMQ) |
+| Broadway | External queues (SQS, Kafka, RabbitMQ) — data ingestion with batching |
 | Oban | Background jobs with database persistence |
 
-- "Send welcome email after signup" → **Oban**
-- "Process messages from SQS" → **Broadway**
+Broadway is NOT a job queue.
 
-Broadway is NOT a job queue. It's a data ingestion pipeline with batching and backpressure.
+### Broadway Gotchas
 
-## Broadway Gotchas from José Valim
+**Processors are for runtime, not code organization.** Dispatch to modules in `handle_message`, don't add processors for different message types.
 
-### Processors Are For Runtime, Not Code Organization
+**one_for_all is for Broadway bugs, not your code.** Your `handle_message` errors are caught and result in failed messages, not supervisor restarts.
 
-> "Separation of concerns is modeled by modules, not processors. Processors are about runtime properties. Using processors for design purposes will lead to inefficient pipelines."
-
-**Wrong:** Adding processors for different message types.
-**Right:** Dispatch to different modules in `handle_message`:
-
-```elixir
-def handle_message(:default, message, _context) do
-  case message.data do
-    %{type: "order"} -> Orders.process(message)
-    %{type: "user"} -> Users.process(message)
-  end
-end
-```
-
-### one_for_all Is For Bugs, Not Business Failures
-
-Broadway's `one_for_all` supervision is for Broadway bugs, not your code:
-
-> "We rescue any failure during process. The one_for_all is really to handle bugs in Broadway which should not happen."
-
-Your `handle_message` errors are caught and result in failed messages, not supervisor restarts.
-
-### Let It Crash Is For *Unexpected* Errors
-
-> "Let it crash (max restarts) is for unexpected errors. Most producers should expect connection to be lost and be able to deal with it."
-
-**The pattern:** Handle expected failures (connection loss, rate limits) in the producer. Reserve max_restarts for unexpected bugs.
-
-### Files Auto-Cleanup on Process Exit
-
-> "Files belong to the process that create them and are automatically collected once said processes finish."
-
-Temp files created by a processor are automatically deleted when that processor finishes—you may not need explicit cleanup.
-
-## GenStateMachine for Explicit State Machines
-
-Use `gen_statem` when you have explicit states + transitions:
-
-```elixir
-def handle_event(:cast, :connect, :disconnected, data) do
-  {:next_state, :connecting, data, [{:state_timeout, 5000, :timeout}]}
-end
-
-def handle_event(:state_timeout, :timeout, :connecting, data) do
-  {:next_state, :disconnected, data}
-end
-```
-
-State timeouts are first-class. Better than rolling your own with `Process.send_after`.
-
-## :sys Module Debugs ANY OTP Process
-
-```elixir
-:sys.get_state(pid)        # Current state
-:sys.trace(pid, true)      # Trace events
-:sys.statistics(pid, true) # Start collecting stats
-:sys.suspend(pid)          # Pause processing
-
-# CRITICAL: Turn off when done!
-:sys.no_debug(pid)
-```
-
-Excessive debug handlers seriously damage performance.
-
-## :persistent_term Is Faster Than ETS
-
-For truly static, read-heavy data:
-
-```elixir
-:persistent_term.put(:config, %{...})
-:persistent_term.get(:config)
-```
-
-Faster reads than ETS. Data persists past crashes. Use for configuration, lookup tables.
-
-## ETS vs DETS vs Mnesia
-
-| Need | Use |
-|------|-----|
-| Memory cache | ETS |
-| Disk persistence | DETS (2GB limit) |
-| Transactions | Mnesia |
-| Distribution | Mnesia |
-| RAM + disk | Mnesia (configurable per table) |
+**Handle expected failures in the producer** (connection loss, rate limits). Reserve max_restarts for unexpected bugs.
 
 ## Supervision Strategies Encode Dependencies
 
@@ -290,18 +80,6 @@ Faster reads than ETS. Data persists past crashes. Use for configuration, lookup
 | :rest_for_one | Sequential dependency |
 
 Think about failure cascades BEFORE coding.
-
-## Agent vs GenServer
-
-Agent is GenServer under the hood.
-
-| Use Agent | Use GenServer |
-|-----------|---------------|
-| Simple state (Map, counter) | Complex callbacks |
-| Prototyping | Production |
-| Would use Enum operations | Need handle_info, init logic |
-
-If Agent feels clunky, extracting to GenServer is straightforward.
 
 ## Abstraction Decision Tree
 
@@ -319,53 +97,30 @@ Need state?
                 └── Yes → GenStateMachine
 ```
 
-## Pooling: When Resources Have Limits
+## Storage Options
 
-Use Poolboy/NimblePool when:
-- Database connection limits
-- External API rate limits
-- Expensive initialization
+| Need | Use |
+|------|-----|
+| Memory cache | ETS (`:read_concurrency` for reads) |
+| Static config | :persistent_term (faster than ETS) |
+| Disk persistence | DETS (2GB limit) |
+| Transactions/Distribution | Mnesia |
 
-```elixir
-:poolboy.transaction(:worker_pool, fn worker ->
-  GenServer.call(worker, :do_work)
-end)
-```
-
-## Telemetry Is Built Into Everything
-
-Phoenix, Ecto, and most libraries emit telemetry events. Attach handlers:
+## :sys Debugs ANY OTP Process
 
 ```elixir
-:telemetry.attach("my-handler", [:phoenix, :endpoint, :stop], &handle/4, nil)
+:sys.get_state(pid)        # Current state
+:sys.trace(pid, true)      # Trace events (TURN OFF when done!)
 ```
-
-Use Telemetry.Metrics + reporters (StatsD, Prometheus, LiveDashboard).
-
-## Common Rationalizations
-
-| Excuse | Reality |
-|--------|---------|
-| "GenServer is the Elixir way" | GenServer is ONE tool. It's a bottleneck by design. |
-| "Task.async is simpler" | Fine for experiments. Use Task.Supervisor for async_nolink and production observability. |
-| "I'll add ETS later if needed" | Design for load now. Retrofitting is harder. |
-| "DynamicSupervisor needs strategies" | DynamicSupervisor only supports :one_for_one. That's fine. |
-| "I need atoms for process names" | Registry exists. Never create atoms dynamically. |
-| "Oban is overkill, I'll use Broadway" | Different tools. Oban = jobs, Broadway = external queues. |
-| "I'll use :pg2 for distribution" | :pg2 is deprecated. Use :pg. |
-| "Poolboy for everything" | Pools are for limited resources. Most things don't need pools. |
-| "I need a process per user" | Only if you need state/concurrency/isolation per user. |
-| "Agent is too simple" | Agent IS GenServer. Extract when you need callbacks. |
 
 ## Red Flags - STOP and Reconsider
 
 - GenServer wrapping stateless computation
-- Task.async in production when you need error handling (use async_nolink)
+- Task.async in production when you need error handling
 - Creating atoms dynamically for process names
 - Single GenServer becoming throughput bottleneck
 - Using Broadway for background jobs (use Oban)
 - Using Oban for external queue consumption (use Broadway)
-- Skipping the decision tree for OTP abstractions
 - No supervision strategy reasoning
 
 **Any of these? Re-read The Iron Law and use the Abstraction Decision Tree.**
