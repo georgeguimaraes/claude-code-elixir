@@ -40,18 +40,21 @@ The truth: Supervisors START processes.
 - Handle expected errors explicitly (`{:ok, _}` / `{:error, _}`)
 - Let unexpected errors crash → supervisor restarts
 
-## Polymorphism: Rule of Least Expressiveness
+## Rule of Least Expressiveness
 
-Use the simplest abstraction:
+Use the simplest abstraction: pattern matching → anonymous functions → behaviors → protocols → message passing. Each step adds complexity.
 
-| For Polymorphism Over... | Use | When |
-|--------------------------|-----|------|
-| Values | Pattern matching | Default choice |
-| Modules | Behaviors | Multiple implementations needed |
-| Data types | Protocols | Composing types, especially built-ins |
-| Processes | Message passing | Stateful by design (IO, handles) |
+## Three Polymorphism Mechanisms
 
-Each step adds complexity. Don't reach for behaviors when pattern matching works.
+| For Polymorphism Over... | Use | Contract |
+|--------------------------|-----|----------|
+| Modules | Behaviors | Upfront callbacks |
+| Data | Protocols | Upfront implementations |
+| Processes | Message passing | Implicit (send/receive) |
+
+**Behaviors** = default for module polymorphism (very cheap at runtime)
+**Protocols** = only when composing data types, especially built-ins
+**Message passing** = only when stateful by design (IO, file handles)
 
 ## Data Modeling Replaces Class Hierarchies
 
