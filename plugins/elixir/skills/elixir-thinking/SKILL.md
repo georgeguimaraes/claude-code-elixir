@@ -101,6 +101,21 @@ def some_function(opts) do
 end
 ```
 
+## Use Default Values, Not Nil Checks
+
+Use `/3` variants (`Keyword.get/3`, `Map.get/3`) instead of case statements branching on `nil`:
+
+```elixir
+# WRONG
+case Keyword.get(opts, :chunker) do
+  nil -> chunker()
+  config -> parse_chunker_config(config)
+end
+
+# RIGHT
+Keyword.get(opts, :chunker, :default) |> parse_chunker_config()
+```
+
 ## Common Rationalizations
 
 | Excuse | Reality |
