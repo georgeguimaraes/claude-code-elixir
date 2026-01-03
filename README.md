@@ -14,6 +14,7 @@ Install all plugins:
 claude plugin install elixir-lsp@claude-code-elixir && \
 claude plugin install mix-format@claude-code-elixir && \
 claude plugin install mix-compile@claude-code-elixir && \
+claude plugin install mix-credo@claude-code-elixir && \
 claude plugin install elixir@claude-code-elixir
 ```
 
@@ -23,8 +24,9 @@ claude plugin install elixir@claude-code-elixir
 |----------|---------|
 | macOS | `brew install elixir elixir-ls` |
 | Windows | `choco install elixir elixir-ls` |
+| Any (mise) | `mise use -g elixir-ls` |
 
-> **Note:** `mix-format` and `mix-compile` require bash (Git Bash or WSL on Windows).
+> **Note:** `mix-format`, `mix-compile`, and `mix-credo` require bash (Git Bash or WSL on Windows).
 
 ---
 
@@ -37,6 +39,7 @@ claude plugin install elixir@claude-code-elixir
 | [elixir-lsp](#elixir-lsp) | LSP | Language Server with completions, go-to-definition, Dialyzer |
 | [mix-format](#mix-format) | Hook | Auto-format `.ex`/`.exs` files on save |
 | [mix-compile](#mix-compile) | Hook | Compile with `--warnings-as-errors` on save |
+| [mix-credo](#mix-credo) | Hook | Run Credo code quality checks on save |
 | [elixir](#elixir) | Skills | BEAM architecture, Phoenix, Ecto, OTP patterns |
 
 ---
@@ -78,6 +81,15 @@ Auto-runs `mix compile --warnings-as-errors` after editing `.ex` files.
 - Only `.ex` files (not `.exs` scripts/tests)
 - Finds `mix.exs` by walking up directories
 - Fails on warnings or errors
+
+#### mix-credo
+
+Auto-runs `mix credo` after editing `.ex` and `.exs` files to check code quality.
+
+- Runs on both `.ex` and `.exs` files
+- Uses project's default Credo configuration
+- Gracefully skips if Credo is not installed
+- Fails on code quality issues
 
 ---
 
