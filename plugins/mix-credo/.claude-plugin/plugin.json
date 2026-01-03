@@ -1,0 +1,11 @@
+{
+  "name": "mix-credo",
+  "version": "1.0.0",
+  "description": "Run mix credo after editing Elixir files to check code quality",
+  "author": {
+    "name": "Wígny Almeida"
+  },
+  "homepage": "https://github.com/georgeguimaraes/claude-code-elixir",
+  "license": "Apache-2.0",
+  "keywords": ["elixir", "credo", "linter", "code-quality"]
+}
