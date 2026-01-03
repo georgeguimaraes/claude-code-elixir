@@ -28,6 +28,11 @@
       "name": "mix-format",
       "source": "./plugins/mix-format",
       "description": "Auto-format Elixir files with mix format after edits"
+    },
+    {
+      "name": "mix-credo",
+      "source": "./plugins/mix-credo",
+      "description": "Run mix credo for static code analysis"
     }
   ]
 }
