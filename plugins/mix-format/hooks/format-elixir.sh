@@ -14,11 +14,22 @@ fi
 
 if [[ "$file_path" == *.ex || "$file_path" == *.exs ]]; then
   if [ -f "$file_path" ]; then
-    if output=$(mix format "$file_path" 2>&1); then
-      echo "Formatted: $file_path"
-    else
-      echo "Format warning: $output" >&2
-    fi
+    # Find mix.exs by walking up from the file
+    dir=$(dirname "$file_path")
+    while [[ "$dir" != "/" ]]; do
+      if [[ -f "$dir/mix.exs" ]]; then
+        cd "$dir"
+        if output=$(mix format "$file_path" 2>&1); then
+          echo "Formatted: $file_path"
+        else
+          echo "Format error:"
+          echo "$output"
+          exit 1
+        fi
+        break
+      fi
+      dir=$(dirname "$dir")
+    done
   fi
 fi
 
