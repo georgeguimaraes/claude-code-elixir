@@ -6,33 +6,44 @@
   "metadata": {
     "description": "Claude Code plugins for Elixir development",
     "homepage": "https://github.com/georgeguimaraes/claude-code-elixir",
-    "pluginRoot": "./plugins"
+    "pluginRoot": "./plugins",
+    "version": "1.0.0"
   },
   "plugins": [
     {
       "name": "elixir-lsp",
       "source": "./plugins/elixir-lsp",
-      "description": "Elixir Language Server integration for Claude Code"
+      "description": "Elixir Language Server integration for go-to-definition, references, and hover docs",
+      "category": "lsp",
+      "keywords": ["elixir", "lsp", "language-server", "intellisense", "autocomplete"]
     },
     {
       "name": "elixir",
       "source": "./plugins/elixir",
-      "description": "Paradigm-shifting skills for Elixir, Phoenix, and OTP development"
+      "description": "Thinking skills for Elixir, Phoenix, Ecto, OTP, and Oban patterns",
+      "category": "skills",
+      "keywords": ["elixir", "phoenix", "ecto", "otp", "oban", "liveview", "genserver"]
     },
     {
       "name": "mix-compile",
       "source": "./plugins/mix-compile",
-      "description": "Run mix compile --warnings-as-errors after editing Elixir files"
+      "description": "Auto-compile Elixir files with warnings-as-errors after edits",
+      "category": "hooks",
+      "keywords": ["elixir", "mix", "compile", "warnings", "errors"]
     },
     {
       "name": "mix-format",
       "source": "./plugins/mix-format",
-      "description": "Auto-format Elixir files with mix format after edits"
+      "description": "Auto-format Elixir files with mix format after edits",
+      "category": "hooks",
+      "keywords": ["elixir", "mix", "format", "formatting", "code-style"]
     },
     {
       "name": "mix-credo",
       "source": "./plugins/mix-credo",
-      "description": "Run Credo code quality checks after editing Elixir files"
+      "description": "Run Credo static analysis after editing Elixir files",
+      "category": "hooks",
+      "keywords": ["elixir", "mix", "credo", "linting", "code-quality"]
     }
   ]
 }
