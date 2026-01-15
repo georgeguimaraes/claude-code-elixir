@@ -148,6 +148,20 @@ end
 | Feature flags | Inject via process dictionary or context |
 | ETS tables | Create per-test tables with unique names |
 | External APIs | Use Mox with explicit allowances |
+| File system operations | Use `@tag :tmp_dir` (see below) |
+
+**Use `tmp_dir` for file tests.** ExUnit creates unique temp directories per test, async-safe:
+
+```elixir
+@tag :tmp_dir
+test "writes file", %{tmp_dir: tmp_dir} do
+  path = Path.join(tmp_dir, "test.txt")
+  File.write!(path, "content")
+  assert File.read!(path) == "content"
+end
+```
+
+Directory is auto-cleaned before each run. Works with `@moduletag :tmp_dir` for all tests in module.
 
 ## Common Rationalizations
 
