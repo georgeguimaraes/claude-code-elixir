@@ -7,7 +7,7 @@
     "description": "Claude Code plugins for Elixir development",
     "homepage": "https://github.com/georgeguimaraes/claude-code-elixir",
     "pluginRoot": "./plugins",
-    "version": "1.0.0"
+    "version": "1.1.0"
   },
   "plugins": [
     {
