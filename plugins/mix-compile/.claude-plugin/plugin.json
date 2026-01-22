@@ -1,6 +1,6 @@
 {
   "name": "mix-compile",
-  "version": "1.0.2",
+  "version": "1.1.0",
   "description": "Run mix compile --warnings-as-errors after editing Elixir files",
   "author": {
     "name": "George Guimaraes"
