@@ -1,6 +1,6 @@
 {
   "name": "mix-credo",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "description": "Run mix credo after editing Elixir files to check code quality",
   "author": {
     "name": "Wígny Almeida"
