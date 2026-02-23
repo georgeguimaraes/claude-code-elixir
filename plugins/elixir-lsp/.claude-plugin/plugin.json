@@ -1,6 +1,6 @@
 {
   "name": "elixir-lsp",
-  "version": "1.0.1",
+  "version": "2.0.0",
   "description": "Elixir Language Server integration for Claude Code",
   "author": {
     "name": "George Guimaraes"
@@ -9,19 +9,14 @@
   "license": "Apache-2.0",
   "keywords": ["elixir", "lsp", "language-server", "phoenix", "heex"],
   "lspServers": {
-    "elixir-ls": {
-      "command": "elixir-ls",
+    "expert": {
+      "command": "expert",
       "args": [],
       "extensionToLanguage": {
         ".ex": "elixir",
         ".exs": "elixir",
         ".heex": "heex",
         ".leex": "leex"
-      },
-      "initializationOptions": {
-        "dialyzerEnabled": true,
-        "fetchDeps": false,
-        "suggestSpecs": true
       }
     }
   }

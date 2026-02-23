@@ -20,11 +20,7 @@ claude plugin install elixir@claude-code-elixir
 
 ## Prerequisites
 
-| Platform | Command |
-|----------|---------|
-| macOS | `brew install elixir elixir-ls` |
-| Windows | `choco install elixir elixir-ls` |
-| Any (mise) | `mise use -g elixir-ls` |
+Install the `expert` binary and make sure it's on your PATH. See [installation instructions](https://expert-lsp.org/docs/installation).
 
 > **Note:** `mix-format`, `mix-compile`, and `mix-credo` require bash (Git Bash or WSL on Windows).
 
@@ -36,7 +32,7 @@ claude plugin install elixir@claude-code-elixir
 
 | Plugin | Type | Description |
 |--------|------|-------------|
-| [elixir-lsp](#elixir-lsp) | LSP | Language Server with completions, go-to-definition, Dialyzer |
+| [elixir-lsp](#elixir-lsp) | LSP | Language Server with completions, go-to-definition, diagnostics |
 | [mix-format](#mix-format) | Hook | Auto-format `.ex`/`.exs` files on save |
 | [mix-compile](#mix-compile) | Hook | Compile with `--warnings-as-errors` on save |
 | [mix-credo](#mix-credo) | Hook | Run Credo code quality checks on save |
@@ -48,27 +44,14 @@ claude plugin install elixir@claude-code-elixir
 
 #### elixir-lsp
 
-Elixir Language Server integration powered by [elixir-ls](https://github.com/elixir-lsp/elixir-ls).
+Elixir Language Server integration powered by [Expert](https://github.com/elixir-lang/expert).
 
 | Feature | Description |
 |---------|-------------|
 | Navigation | Go to definition, find references |
 | Completions | With signature help and docs |
-| Diagnostics | Dialyzer type checking |
+| Diagnostics | Compiler warnings and errors |
 | File types | `.ex`, `.exs`, `.heex`, `.leex` |
-
-<details>
-<summary>Default settings</summary>
-
-| Option | Default | Description |
-|--------|---------|-------------|
-| `dialyzerEnabled` | `true` | Enable Dialyzer diagnostics |
-| `fetchDeps` | `false` | Auto-fetch deps on compile |
-| `suggestSpecs` | `true` | Suggest @spec annotations |
-
-Override per-project: `.elixir_ls/settings.json`
-
-</details>
 
 #### mix-format
 
@@ -200,11 +183,7 @@ OTP design patterns and when to use each abstraction.
 
 ## Troubleshooting
 
-**elixir-ls not found:** Ensure Homebrew bin is in PATH:
-
-```bash
-export PATH="/opt/homebrew/bin:$PATH"
-```
+**expert not found:** Ensure the `expert` binary is on your PATH. See [installation instructions](https://expert-lsp.org/docs/installation).
 
 ---
 
