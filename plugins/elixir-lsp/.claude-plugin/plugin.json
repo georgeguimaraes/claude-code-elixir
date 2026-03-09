@@ -11,7 +11,7 @@
   "lspServers": {
     "expert": {
       "command": "expert",
-      "args": [],
+      "args": ["--stdio"],
       "extensionToLanguage": {
         ".ex": "elixir",
         ".exs": "elixir",
