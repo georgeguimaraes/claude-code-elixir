@@ -1,6 +1,6 @@
 {
   "name": "elixir-lsp",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "Elixir Language Server integration for Claude Code",
   "author": {
     "name": "George Guimaraes"
