@@ -1,0 +1,119 @@
+#!/usr/bin/env python3
+"""Wrapper for Expert LSP that auto-responds to server-initiated requests.
+
+Workaround for Claude Code not handling server-initiated requests.
+Upstream: https://github.com/anthropics/claude-code/issues/32595
+Context: https://github.com/georgeguimaraes/claude-code-elixir/issues/6
+
+Claude Code doesn't respond to server->client requests (messages with both
+"id" and "method" fields). This wrapper intercepts them, sends back a success
+response to Expert, and drops the message so Claude Code never sees it.
+
+This wrapper can be removed once the upstream issue is fixed.
+"""
+import sys
+import json
+import threading
+import subprocess
+
+proc = subprocess.Popen(
+    ["expert", "--stdio"],
+    stdin=subprocess.PIPE,
+    stdout=subprocess.PIPE,
+    stderr=sys.stderr,
+)
+
+CHUNK_SIZE = 4096
+
+
+def forward_stdin():
+    try:
+        while True:
+            data = sys.stdin.buffer.read1(CHUNK_SIZE)
+            if not data:
+                break
+            proc.stdin.write(data)
+            proc.stdin.flush()
+    except Exception:
+        pass
+    finally:
+        try:
+            proc.stdin.close()
+        except Exception:
+            pass
+
+
+def read_exact(stream, n):
+    parts = []
+    remaining = n
+    while remaining > 0:
+        chunk = stream.read1(remaining) if hasattr(stream, "read1") else stream.read(remaining)
+        if not chunk:
+            break
+        parts.append(chunk)
+        remaining -= len(chunk)
+    return b"".join(parts)
+
+
+def forward_stdout():
+    buf = b""
+    stdout = proc.stdout
+    try:
+        while True:
+            chunk = stdout.read1(CHUNK_SIZE)
+            if not chunk:
+                break
+            buf += chunk
+
+            while b"\r\n\r\n" in buf:
+                header_end = buf.index(b"\r\n\r\n")
+                header = buf[:header_end].decode("ascii", errors="replace")
+                content_length = None
+                for line in header.split("\r\n"):
+                    if line.lower().startswith("content-length:"):
+                        content_length = int(line.split(":")[1].strip())
+                        break
+
+                if content_length is None:
+                    sys.stdout.buffer.write(buf[: header_end + 4])
+                    sys.stdout.buffer.flush()
+                    buf = buf[header_end + 4 :]
+                    continue
+
+                body_start = header_end + 4
+                msg_end = body_start + content_length
+
+                if len(buf) < msg_end:
+                    more = read_exact(stdout, msg_end - len(buf))
+                    buf += more
+                    if len(buf) < msg_end:
+                        break
+
+                body = buf[body_start:msg_end]
+                is_server_request = False
+                try:
+                    msg = json.loads(body)
+                    if "id" in msg and "method" in msg:
+                        is_server_request = True
+                except (json.JSONDecodeError, KeyError):
+                    pass
+
+                if is_server_request:
+                    response = json.dumps({"jsonrpc": "2.0", "id": msg["id"], "result": None})
+                    resp_bytes = f"Content-Length: {len(response)}\r\n\r\n{response}".encode()
+                    proc.stdin.write(resp_bytes)
+                    proc.stdin.flush()
+                else:
+                    sys.stdout.buffer.write(buf[:msg_end])
+                    sys.stdout.buffer.flush()
+
+                buf = buf[msg_end:]
+    except Exception:
+        pass
+
+
+stdin_thread = threading.Thread(target=forward_stdin, daemon=True)
+stdin_thread.start()
+forward_stdout()
+proc.wait()
+sys.exit(proc.returncode or 0)

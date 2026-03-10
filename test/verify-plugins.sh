@@ -53,21 +53,31 @@ LSP_JSON="$REPO_ROOT/plugins/elixir-lsp/.claude-plugin/plugin.json"
 if python3 -c "
 import json, sys
 d = json.load(open('$LSP_JSON'))
-assert d['lspServers']['expert']['command'] == 'expert'
+cmd = d['lspServers']['expert']['command']
+assert 'expert-wrapper' in cmd, f'expected expert-wrapper, got {cmd}'
 " 2>/dev/null; then
-  pass "LSP command is 'expert'"
+  pass "LSP command uses expert-wrapper"
 else
-  fail "LSP command is not 'expert'"
+  fail "LSP command should use expert-wrapper"
 fi
 
-if python3 -c "
-import json, sys
-d = json.load(open('$LSP_JSON'))
-assert '--stdio' in d['lspServers']['expert']['args']
-" 2>/dev/null; then
-  pass "LSP args include '--stdio'"
+WRAPPER="$REPO_ROOT/plugins/elixir-lsp/bin/expert-wrapper"
+if [ -f "$WRAPPER" ]; then
+  pass "expert-wrapper script exists"
 else
-  fail "LSP args missing '--stdio'"
+  fail "expert-wrapper script missing"
+fi
+
+if [ -x "$WRAPPER" ]; then
+  pass "expert-wrapper is executable"
+else
+  fail "expert-wrapper is not executable"
+fi
+
+if python3 -c "import ast; ast.parse(open('$WRAPPER').read())" 2>/dev/null; then
+  pass "expert-wrapper has valid Python syntax"
+else
+  fail "expert-wrapper has invalid Python syntax"
 fi
 
 if python3 -c "

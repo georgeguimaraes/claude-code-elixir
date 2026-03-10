@@ -183,7 +183,7 @@ OTP design patterns and when to use each abstraction.
 
 ## Known Issues
 
-**elixir-lsp: LSP server hangs on startup.** Claude Code's LSP client doesn't respond to `client/registerCapability` requests that Expert sends during initialization. This causes the server to block indefinitely and all LSP operations (hover, go-to-definition, etc.) fail with "server is starting". Tracked upstream at [anthropics/claude-code#32595](https://github.com/anthropics/claude-code/issues/32595). The plugin configuration is correct and will work once the upstream fix lands.
+**elixir-lsp: `client/registerCapability` workaround.** Claude Code's LSP client doesn't respond to `client/registerCapability` requests that Expert sends during initialization ([anthropics/claude-code#32595](https://github.com/anthropics/claude-code/issues/32595)). The plugin includes a Python wrapper (`expert-wrapper`) that intercepts these requests and auto-responds so Expert can initialize properly. The wrapper will be removed once the upstream fix lands. Requires Python 3 on PATH.
 
 ## Troubleshooting
 
