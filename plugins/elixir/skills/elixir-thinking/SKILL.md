@@ -136,13 +136,15 @@ end
 
 ## Testing
 
-**Use `unbuffer` when running mix commands.** `mix test` and other mix commands may buffer output when not connected to a TTY (common in CI and agent environments), causing truncated or missing results. Always prefix with `unbuffer`:
+**Use `unbuffer` when running mix commands.** When stdout is not a TTY (pipes, CI runners, agent harnesses, subprocesses), the C stdlib switches from line buffering to block buffering (~4-8KB chunks). Programs detect this via `isatty()` on the output file descriptor. The BEAM VM inherits this behavior from its C runtime — Erlang's `:io.columns/1` checks the *input* descriptor, not output, so Elixir can't reliably detect whether its output is being piped. This means `mix test` output may arrive late, get truncated, or lose ANSI formatting when captured by another process.
+
+`unbuffer` (from the `expect` package) allocates a pseudo-terminal (pty) between your shell and the command, making the program believe stdout is a real terminal. This restores line buffering and ANSI output:
 
 ```bash
-# Bad — output may be buffered/truncated
+# Bad — block-buffered, output may arrive late or truncated
 mix test
 
-# Good — full output captured
+# Good — pty-backed, line-buffered, full output captured
 unbuffer mix test
 unbuffer mix test --cover
 ```
