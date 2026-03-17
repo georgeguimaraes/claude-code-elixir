@@ -149,6 +149,8 @@ unbuffer mix test
 unbuffer mix test --cover
 ```
 
+`unbuffer` ships with `expect` — install via `brew install expect` (macOS) or `apt install expect` (Debian/Ubuntu).
+
 **Prefer pattern matching over imperative assertions.** Never use `assert length` + `Enum.at`/`List.last`/`hd`. Pattern match checks length and content in one shot:
 
 ```elixir
