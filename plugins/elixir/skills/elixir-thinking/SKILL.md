@@ -136,6 +136,17 @@ end
 
 ## Testing
 
+**Use `unbuffer` when running mix commands.** `mix test` and other mix commands may buffer output when not connected to a TTY (common in CI and agent environments), causing truncated or missing results. Always prefix with `unbuffer`:
+
+```bash
+# Bad — output may be buffered/truncated
+mix test
+
+# Good — full output captured
+unbuffer mix test
+unbuffer mix test --cover
+```
+
 **Prefer pattern matching over imperative assertions.** Never use `assert length` + `Enum.at`/`List.last`/`hd`. Pattern match checks length and content in one shot:
 
 ```elixir
