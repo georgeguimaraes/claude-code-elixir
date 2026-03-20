@@ -136,6 +136,8 @@ end
 
 ## Testing
 
+**Always prefix `mix` commands with `unbuffer`** to get ANSI colors and prevent stdout block-buffering in non-TTY environments (e.g. `unbuffer mix test`). Install: `brew install expect` (macOS) or `apt install expect` (Linux).
+
 **Prefer pattern matching over imperative assertions.** Never use `assert length` + `Enum.at`/`List.last`/`hd`. Pattern match checks length and content in one shot:
 
 ```elixir
