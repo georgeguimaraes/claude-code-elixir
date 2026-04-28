@@ -120,9 +120,9 @@ Architectural patterns for Phoenix and LiveView.
 
 | Concept | Insight |
 |---------|---------|
-| **Iron Law** | NO DATABASE QUERIES IN MOUNT |
+| Where to load data | mount/3 by default; handle_params/3 for live navigation (push_patch) |
+| Initial double-load | mount and handle_params both run twice; use connected?/1, assign_async/3, or assign_new/3 |
 | Scopes (1.8+) | Security-first authorization threading |
-| mount vs handle_params | mount = setup, handle_params = data |
 | PubSub | Scoped topics, `broadcast_from` to avoid self-broadcast |
 | Channel fastlane | Socket state can be stale — re-fetch or include in broadcast |
 
