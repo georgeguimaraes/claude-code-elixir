@@ -150,6 +150,8 @@ assert Enum.at(students, 1).name == "Bob"
 assert [%{name: "Alice"}, %{name: "Bob"}] = students
 ```
 
+Same goes for type-only predicates: `assert is_map(user)` / `assert is_list(posts)` pass for almost any non-error return. Pattern match the shape and content together: `assert %User{email: "a@b.com"} = user`. `is_nil/1` is fine when nil-ness is the whole point.
+
 **Test behavior, not implementation.** Test use cases / public API. Refactoring shouldn't break tests.
 
 **Test your code, not the framework.** If deleting your code doesn't fail the test, it's tautological.
