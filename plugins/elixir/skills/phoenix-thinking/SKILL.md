@@ -1,37 +1,45 @@
 ---
 name: phoenix-thinking
-description: This skill should be used when the user asks to "add a LiveView page", "create a form", "handle real-time updates", "broadcast changes to users", "add a new route", "create an API endpoint", "fix this LiveView bug", "why is mount called twice?", or mentions handle_event, handle_info, handle_params, mount, channels, controllers, components, assigns, sockets, or PubSub. Essential for avoiding duplicate queries in mount.
+description: This skill should be used when the user asks to "add a LiveView page", "create a form", "handle real-time updates", "broadcast changes to users", "add a new route", "create an API endpoint", "fix this LiveView bug", "why is mount called twice?", or mentions handle_event, handle_info, handle_params, mount, channels, controllers, components, assigns, sockets, or PubSub. Covers where to load data (mount vs handle_params) and the LiveView lifecycle.
 ---
 
 # Phoenix Thinking
 
 Mental shifts for Phoenix applications. These insights challenge typical web framework patterns.
 
-## The Iron Law
+## Where to Load Data: mount vs handle_params
 
-```
-NO DATABASE QUERIES IN MOUNT
-```
-
-mount/3 is called TWICE (HTTP request + WebSocket connection). Queries in mount = duplicate queries.
+Default: load data in `mount/3`.
 
 ```elixir
 def mount(_params, _session, socket) do
-  # NO database queries here! Called twice.
-  {:ok, assign(socket, posts: [], loading: true)}
-end
-
-def handle_params(params, _uri, socket) do
-  # Database queries here - once per navigation
-  posts = Blog.list_posts(socket.assigns.scope)
-  {:noreply, assign(socket, posts: posts, loading: false)}
+  posts = Blog.list_posts(socket.assigns.current_scope)
+  {:ok, assign(socket, posts: posts)}
 end
 ```
 
-**mount/3** = setup only (empty assigns, subscriptions, defaults)
-**handle_params/3** = data loading (all database queries, URL-driven state)
+Yes, mount runs twice on initial load (HTTP dead render + WebSocket connect). So does `handle_params/3`. That's the LiveView lifecycle, not a bug to route around. Moving queries from mount to handle_params does not dedupe them.
 
-**No exceptions:** Don't query "just this one small thing" in mount. Don't "optimize later". LiveView lifecycle is non-negotiable.
+Use `handle_params/3` for data that changes on live navigation (`push_patch` / `<.link patch={...}>`). mount does not re-run on patches, handle_params does.
+
+```elixir
+def handle_params(%{"filter" => filter}, _uri, socket) do
+  posts = Blog.list_posts(socket.assigns.current_scope, filter)
+  {:noreply, assign(socket, posts: posts, filter: filter)}
+end
+```
+
+When the initial double-load actually matters, the real tools are:
+- `connected?(socket)` to gate work to the connected render (loses SEO / no-JS rendering)
+- `assign_async/3` to load after mount returns, in a separate process
+- `assign_new/3` to reuse values already set on `conn.assigns` by upstream Plugs (e.g. `:current_user`), or shared from a parent LiveView. It does not dedupe arbitrary work across the dead/connected boundary: the function still runs on connected mount.
+
+```elixir
+def mount(_params, _session, socket) do
+  posts = if connected?(socket), do: Blog.list_posts(socket.assigns.current_scope), else: []
+  {:ok, assign(socket, posts: posts)}
+end
+```
 
 ## Scopes: Security-First Pattern (Phoenix 1.8+)
 
@@ -120,7 +128,7 @@ Don't use `preserve_req_body: true`—it keeps the entire body in memory for ALL
 
 ## Red Flags - STOP and Reconsider
 
-- Database query in mount/3
+- Loading patch-mutable data in mount/3 instead of handle_params/3
 - Unscoped PubSub topics in multi-tenant app
 - LiveView polling external APIs directly
 - Using terminate/2 for cleanup (won't fire without trap_exit)
@@ -129,4 +137,4 @@ Don't use `preserve_req_body: true`—it keeps the entire body in memory for ALL
 - CSS class merging for component customization (use variants)
 - Trusting `%Plug.Upload{}.content_type` for security
 
-**Any of these? Re-read The Iron Law and the Gotchas section.**
+**Any of these? Re-read the Gotchas section.**
