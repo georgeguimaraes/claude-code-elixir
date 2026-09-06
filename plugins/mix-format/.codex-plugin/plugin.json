@@ -1,0 +1,24 @@
+{
+  "name": "mix-format",
+  "version": "2.0.0",
+  "description": "Auto-format Elixir files with mix format after edits",
+  "author": {
+    "name": "George Guimaraes"
+  },
+  "homepage": "https://github.com/georgeguimaraes/elixir-agent-tools",
+  "license": "Apache-2.0",
+  "keywords": [
+    "elixir",
+    "mix-format",
+    "formatter"
+  ],
+  "interface": {
+    "displayName": "Mix Format",
+    "shortDescription": "Auto-format Elixir files with mix format after edits",
+    "longDescription": "Auto-format Elixir files with mix format after edits. Handles Claude Code edits and Codex patches in Mix projects. Requires Bash and Elixir/Mix on PATH.",
+    "developerName": "George Guimarães",
+    "category": "Developer Tools",
+    "capabilities": [],
+    "defaultPrompt": "Check this Elixir project with mix format."
+  }
+}

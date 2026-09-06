@@ -1,198 +1,190 @@
-# Claude Code Elixir
+# Elixir Agent Tools
 
-Claude Code plugins for Elixir development.
+Elixir development guidance for coding agents, with optional Mix checks and Expert language server integration.
+
+Install the `elixir-dev` plugin for five skills covering language idioms, Phoenix interfaces, Ecto persistence, OTP processes, and Oban jobs. Add the tooling plugins when you want automatic checks or code navigation.
+
+## Choose your plugins
+
+| Plugin | What you get | Requirements |
+|--------|--------------|--------------|
+| [elixir-dev](#elixir-skills) | Five skills that load when relevant to a task | A harness with Agent Skills support |
+| [mix-format](#mix-format) | Run `mix format` after edits to `.ex` and `.exs` files | Claude Code or Codex, Bash, Elixir/Mix, a Mix project |
+| [mix-compile](#mix-compile) | Compile with `--warnings-as-errors` after edits to `.ex` files | Claude Code or Codex, Bash, Elixir/Mix, a Mix project |
+| [mix-credo](#mix-credo) | Run Credo after edits to `.ex` and `.exs` files | Claude Code or Codex, Bash, Elixir/Mix, Credo in the project |
+| [elixir-lsp](#elixir-lsp) | Code navigation and diagnostics through Expert | Claude Code, Expert, Python 3 |
+
+The skills are Markdown instructions and need no local Elixir installation to load. Running the project's code still requires its normal development environment. The Mix hooks support macOS and Linux, including WSL on Windows. They use Bash 3.2+, standard Unix tools, and the OS file-lock utility: `lockf` on macOS or `flock` on Linux/WSL. JSON parsing is bundled, so the Mix hooks need no jq, Python, uv, or newer Elixir version.
 
 ## Installation
 
-```bash
-claude plugin marketplace add georgeguimaraes/claude-code-elixir
-```
+### Claude Code
 
-Install all plugins:
+Add the marketplace and install the skills:
 
 ```bash
-claude plugin install elixir-lsp@claude-code-elixir && \
-claude plugin install mix-format@claude-code-elixir && \
-claude plugin install mix-compile@claude-code-elixir && \
-claude plugin install mix-credo@claude-code-elixir && \
-claude plugin install elixir@claude-code-elixir
+claude plugin marketplace add georgeguimaraes/elixir-agent-tools
+claude plugin install elixir-dev@elixir-agent-tools
 ```
 
-## Prerequisites
+Install any optional tools you want:
 
-Install the `expert` binary and make sure it's on your PATH. See [installation instructions](https://expert-lsp.org/docs/installation).
+```bash
+claude plugin install mix-format@elixir-agent-tools
+claude plugin install mix-compile@elixir-agent-tools
+claude plugin install mix-credo@elixir-agent-tools
+claude plugin install elixir-lsp@elixir-agent-tools
+```
 
-> **Note:** `mix-format`, `mix-compile`, and `mix-credo` require bash (Git Bash or WSL on Windows).
+Both Claude Code and Codex use the marketplace ID `elixir-agent-tools` and the skills plugin name `elixir-dev`.
 
----
+### Codex plugin
 
-## Plugins
+Register the marketplace from your terminal:
 
-### Overview
+```bash
+codex plugin marketplace add georgeguimaraes/elixir-agent-tools
+```
 
-| Plugin | Type | Description |
-|--------|------|-------------|
-| [elixir-lsp](#elixir-lsp) | LSP | Language Server with completions, go-to-definition, diagnostics |
-| [mix-format](#mix-format) | Hook | Auto-format `.ex`/`.exs` files on save |
-| [mix-compile](#mix-compile) | Hook | Compile with `--warnings-as-errors` on save |
-| [mix-credo](#mix-credo) | Hook | Run Credo code quality checks on save |
-| [elixir](#elixir) | Skills | BEAM architecture, Phoenix, Ecto, OTP patterns |
+In Codex, open `/plugins`, select the **Elixir Agent Tools** marketplace, and install **Elixir Development**. You can also install directly from the terminal:
 
----
+```bash
+codex plugin add elixir-dev@elixir-agent-tools
+```
 
-### Tools
+Start a new session to use the five bundled skills. The Codex plugin contains the same skill files as the Claude Code plugin.
 
-#### elixir-lsp
+Install any optional Mix checks you want:
 
-Elixir Language Server integration powered by [Expert](https://github.com/elixir-lang/expert).
+```bash
+codex plugin add mix-format@elixir-agent-tools
+codex plugin add mix-compile@elixir-agent-tools
+codex plugin add mix-credo@elixir-agent-tools
+```
 
-| Feature | Description |
-|---------|-------------|
-| Navigation | Go to definition, find references |
-| Completions | With signature help and docs |
-| Diagnostics | Compiler warnings and errors |
-| File types | `.ex`, `.exs`, `.heex`, `.leex` |
+Use `/hooks` in Codex to review and trust the installed hook commands. Codex requires hook trust separately from plugin installation. See the [Codex hooks documentation](https://learn.chatgpt.com/docs/hooks). The Expert LSP plugin remains Claude Code only.
 
-#### mix-format
+To try unpublished changes from a local checkout, register that directory instead of the GitHub repository:
 
-Auto-runs `mix format` after editing `.ex` and `.exs` files.
+```bash
+codex plugin marketplace add /path/to/elixir-agent-tools
+codex plugin add elixir-dev@elixir-agent-tools
+```
 
-#### mix-compile
+### Codex and other agents with npx skills
 
-Auto-runs `mix compile --warnings-as-errors` after editing `.ex` files.
+Use the [Skills CLI](https://github.com/vercel-labs/skills) to install all five skills into your current project for Codex:
 
-- Only `.ex` files (not `.exs` scripts/tests)
-- Finds `mix.exs` by walking up directories
-- Fails on warnings or errors
+```bash
+npx skills add georgeguimaraes/elixir-agent-tools -a codex --skill '*'
+```
 
-#### mix-credo
+Add `-g` to make them available across projects. To choose individual skills, replace `--skill '*'` with names such as `--skill phoenix ecto`. Use `-a opencode` for OpenCode or `-a claude-code` for a skills-only Claude Code installation.
 
-Auto-runs `mix credo` after editing `.ex` and `.exs` files to check code quality.
+To preview the available skills without installing:
 
-- Runs on both `.ex` and `.exs` files
-- Uses project's default Credo configuration
-- Gracefully skips if Credo is not installed
-- Fails on code quality issues
+```bash
+npx skills add georgeguimaraes/elixir-agent-tools --list
+```
 
----
+This installs standalone skill files. Choose either this method or the native plugin to avoid duplicate skills. Install Mix hooks through the native Claude Code or Codex plugin commands above. The LSP plugin uses Claude Code's plugin installation.
 
-### Skills
+### Manual skills installation
 
-#### elixir
+Both [Codex](https://learn.chatgpt.com/docs/build-skills) and [OpenCode](https://opencode.ai/docs/skills/) discover personal skills under `~/.agents/skills`. Clone this repository into a persistent location and link each skill:
 
-Paradigm-shifting skills for Elixir, Phoenix, and OTP development. Includes a SessionStart hook that auto-suggests skills when working on Elixir code.
+```bash
+git clone https://github.com/georgeguimaraes/elixir-agent-tools.git "$HOME/.local/share/elixir-agent-tools"
+mkdir -p "$HOME/.agents/skills"
+for skill in elixir phoenix ecto otp oban; do
+  ln -s "$HOME/.local/share/elixir-agent-tools/plugins/elixir-dev/skills/$skill" "$HOME/.agents/skills/$skill"
+done
+```
 
-**Included skills:**
+If a destination already exists, inspect it before replacing it. Start a new session after installation. Updating the clone updates the linked skills.
 
-| Skill | Use When |
-|-------|----------|
-| `elixir-thinking` | Designing modules, processes, data structures |
-| `phoenix-thinking` | Working with Phoenix, LiveView, PubSub |
-| `ecto-thinking` | Working with Ecto, contexts, schemas |
-| `otp-thinking` | Implementing GenServers, supervisors, Tasks |
+For other harnesses with [Agent Skills support](https://agentskills.io), install the individual folders from `plugins/elixir-dev/skills/` in that harness's skill directory. Mix hooks are packaged for Claude Code and Codex. Other harnesses need an adapter for their edit events.
 
-##### elixir-thinking
+## Elixir skills
 
-Mental models for writing Elixir — how it differs from OOP.
+Each skill has its own discovery description. The agent can load several skills for a task that crosses domains, such as a LiveView form backed by an Ecto changeset. There is no startup hook or mandatory routing skill.
 
-| Concept | Insight |
-|---------|---------|
-| **Iron Law** | NO PROCESS WITHOUT A RUNTIME REASON |
-| Three dimensions | Behavior, state, mutability are **decoupled** |
-| Processes | For runtime (state/concurrency/faults), **not** code organization |
-| "Let it crash" | Means "let it **heal**" — supervisors restart |
-| Polymorphism | Behaviors → Protocols → Message passing (least to most dynamic) |
+| Skill | Scope | Example request |
+|-------|-------|-----------------|
+| [elixir](plugins/elixir-dev/skills/elixir/SKILL.md) | Functions, modules, data structures, pattern matching, error handling | "Refactor this nested case expression" |
+| [phoenix](plugins/elixir-dev/skills/phoenix/SKILL.md) | LiveView, components, HTTP endpoints, Plug, channels, PubSub | "Keep this LiveView filter in sync with the URL" |
+| [ecto](plugins/elixir-dev/skills/ecto/SKILL.md) | Schemas, changesets, queries, transactions, migrations, data access | "Fix the N+1 queries on this page" |
+| [otp](plugins/elixir-dev/skills/otp/SKILL.md) | Processes, supervision, runtime concurrency, ETS, Broadway | "Find the bottleneck in this GenServer" |
+| [oban](plugins/elixir-dev/skills/oban/SKILL.md) | Durable jobs, retries, scheduling, uniqueness, Oban Pro workflows | "Send these emails in a job that retries failures" |
 
-<details>
-<summary>Sources</summary>
+OTP covers work and state managed by running processes. Oban covers jobs that need persistence, retry policies, or scheduling. Phoenix owns interface behavior, while Ecto owns the persistence behind it.
+
+### Upgrading to elixir-dev 3.0
+
+Skill names now use their domain directly: `elixir`, `phoenix`, `ecto`, `otp`, and `oban`. Remove the `-thinking` suffix from explicit skill references in your prompts and agent instructions. The `using-elixir-skills` router and its startup hook have been removed.
+
+The plugin is now named `elixir-dev` and the marketplace is `elixir-agent-tools`. If you installed from the old Claude Code marketplace, uninstall the plugins you used from `claude-code-elixir`, remove that marketplace, and add `georgeguimaraes/elixir-agent-tools`. Reinstall your chosen plugins with the new marketplace ID using the installation commands above. The old `elixir` plugin is replaced by `elixir-dev`.
+
+Update any explicit plugin-qualified skill references to use the new bundle name.
+
+If you installed skills manually, replace your old skill links or copies with the renamed folders under `plugins/elixir-dev/skills/`.
+
+### Sources
+
+The skills draw on Elixir and Erlang documentation, framework guides, and talks about application design:
 
 - [José Valim - Gang of None](https://www.youtube.com/watch?v=4yAaHV9wQE4)
 - [Saša Jurić - The Soul of Erlang and Elixir](https://www.youtube.com/watch?v=JvBT4XBdoUE)
 - [Saša Jurić - Clarity](https://www.youtube.com/watch?v=6sNmJtoKDCo)
 - [Designing Elixir Systems with OTP](https://pragprog.com/titles/jgotp/designing-elixir-systems-with-otp/)
 - [Official Elixir Guides](https://elixir-lang.org/getting-started/)
-
-</details>
-
-##### phoenix-thinking
-
-Architectural patterns for Phoenix and LiveView.
-
-| Concept | Insight |
-|---------|---------|
-| Where to load data | mount/3 by default; handle_params/3 for live navigation (push_patch) |
-| Initial double-load | mount and handle_params both run twice; use connected?/1, assign_async/3, or assign_new/3 |
-| Scopes (1.8+) | Security-first authorization threading |
-| PubSub | Scoped topics, `broadcast_from` to avoid self-broadcast |
-| Channel fastlane | Socket state can be stale — re-fetch or include in broadcast |
-
-<details>
-<summary>Sources</summary>
-
 - [Phoenix 1.8 Scopes](https://hexdocs.pm/phoenix/scopes.html)
 - [Phoenix LiveView Docs](https://hexdocs.pm/phoenix_live_view)
 - [Stephen Bussey - Real-Time Phoenix](https://pragprog.com/titles/sbsockets/real-time-phoenix/)
-
-</details>
-
-##### ecto-thinking
-
-Architectural patterns for Ecto and contexts.
-
-| Concept | Insight |
-|---------|---------|
-| Contexts | Bounded domains with their own "dialect" |
-| Cross-context refs | Use IDs, not `belongs_to` associations |
-| Schemas | Multiple changesets per schema, `embedded_schema` for forms |
-| Preloads | Separate vs join — pick based on data shape |
-| pool_count vs pool_size | pool_count = DBConnection pools, pool_size = connections per pool |
-
-<details>
-<summary>Sources</summary>
-
 - [Phoenix Contexts Guide](https://hexdocs.pm/phoenix/contexts.html)
 - [German Velasco - DDD for Phoenix Contexts](https://www.youtube.com/watch?v=mSgZ2LJXfew) (ElixirConf 2024)
 - [Ecto Multi-Tenancy Guide](https://hexdocs.pm/ecto/multi-tenancy-with-query-prefixes.html)
-
-</details>
-
-##### otp-thinking
-
-OTP design patterns and when to use each abstraction.
-
-| Concept | Insight |
-|---------|---------|
-| **Iron Law** | GENSERVER IS A BOTTLENECK BY DESIGN |
-| ETS | Bypasses bottleneck — concurrent reads with `:read_concurrency` |
-| Task.Supervisor | THE pattern for async work (not raw `Task.async`) |
-| Registry + DynamicSupervisor | Named dynamic processes without atom leaks |
-| Broadway vs Oban | External queues vs background jobs — different problems |
-
-<details>
-<summary>Sources</summary>
-
 - [Erlang OTP Design Principles](https://www.erlang.org/doc/system/design_principles.html)
 - [Elixir GenServer Docs](https://hexdocs.pm/elixir/GenServer.html)
 - [Elixir School - OTP Concurrency](https://elixirschool.com/en/lessons/advanced/otp_concurrency)
 - [Saša Jurić - Elixir in Action](https://www.manning.com/books/elixir-in-action-third-edition)
-- [Stephen Bussey - Real-Time Phoenix](https://pragprog.com/titles/sbsockets/real-time-phoenix/)
 
-</details>
+## Optional tools
 
----
+The three Mix plugins share a Bash runner and a bundled [JSON.sh](https://github.com/dominictarr/JSON.sh) parser. They handle Claude Code's `Edit`, `MultiEdit`, and `Write` events and Codex's `apply_patch` events, including patches spanning multiple files or projects. Shell commands that write files do not trigger these edit hooks.
 
-## Known Issues
+Checks run synchronously and return failures as context to the agent. The plugins serialize their Mix commands per project, but hook execution order is not guaranteed. Formatting is not guaranteed to finish before compilation or Credo starts. Hooks have bounded waits and report timeouts. Mix plugins 2.0 replace the old single-file scripts and asynchronous Credo hook.
 
-**elixir-lsp: `client/registerCapability` workaround.** Claude Code's LSP client doesn't respond to `client/registerCapability` requests that Expert sends during initialization ([anthropics/claude-code#32595](https://github.com/anthropics/claude-code/issues/32595)). The plugin includes a Python wrapper (`expert-wrapper`) that intercepts these requests and auto-responds so Expert can initialize properly. The wrapper will be removed once the upstream fix lands. Requires Python 3 on PATH.
+### mix-format
 
-## Troubleshooting
+Runs `mix format` on surviving edited `.ex` and `.exs` files, using the nearest parent `mix.exs` to locate each project. Reports formatting failures.
 
-**expert not found:** Ensure the `expert` binary is on your PATH. See [installation instructions](https://expert-lsp.org/docs/installation).
+### mix-compile
 
----
+Runs `mix compile --warnings-as-errors` once per affected Mix project after editing an `.ex` file. Deletions and both sides of a move also trigger compilation. Reports compiler warnings and errors. Edits to `.exs` scripts and tests don't trigger compilation.
+
+Skips compilation when `lsof` detects a BEAM process running from the project directory, to avoid competing with a running server or Mix task.
+
+### mix-credo
+
+Runs `mix credo` for each surviving edited `.ex` or `.exs` file using the project's Credo configuration. Reports code quality issues and skips the check if the Credo task isn't installed. Dependency and project failures remain visible.
+
+### elixir-lsp
+
+Connects Claude Code to [Expert](https://github.com/elixir-lang/expert) for navigation and compiler diagnostics in `.ex`, `.exs`, `.heex`, and `.leex` files.
+
+Install the `expert` binary using the [Expert installation guide](https://expert-lsp.org/docs/installation) and make sure it's on your PATH. The bundled wrapper also requires Python 3.
+
+The wrapper works around Claude Code's handling of server-initiated LSP requests, including `client/registerCapability` ([upstream issue](https://github.com/anthropics/claude-code/issues/32595)). See [expert-wrapper](plugins/elixir-lsp/bin/expert-wrapper) for the implementation.
+
+## Developing the hooks
+
+Edit the canonical runner and parser helpers under `scripts/mix-hooks/`, then run `bash scripts/sync-mix-hooks.sh` to bundle them into the three independently installable plugins. The bundled JSON.sh source and its MIT license live under `vendor/` in each copy.
+
+Run `bash test/verify-plugins.sh` to check package structure and bundle consistency. Run `uv run --no-project python test/test-mix-hooks.py` for behavioral tests with isolated plugin installations and fake Mix commands. Python is used only by development checks, not the Mix hooks.
 
 ## License
 
 Copyright (c) 2025 George Guimarães
 
-Licensed under the Apache License, Version 2.0. See [LICENSE](LICENSE) for details.
+Licensed under the Apache License, Version 2.0. See [LICENSE](LICENSE).

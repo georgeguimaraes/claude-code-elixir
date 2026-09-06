@@ -1,0 +1,24 @@
+{
+  "name": "mix-compile",
+  "version": "2.0.0",
+  "description": "Run mix compile --warnings-as-errors after editing Elixir files",
+  "author": {
+    "name": "George Guimaraes"
+  },
+  "homepage": "https://github.com/georgeguimaraes/elixir-agent-tools",
+  "license": "Apache-2.0",
+  "keywords": [
+    "elixir",
+    "mix-compile",
+    "warnings-as-errors"
+  ],
+  "interface": {
+    "displayName": "Mix Compile",
+    "shortDescription": "Run mix compile --warnings-as-errors after editing Elixir files",
+    "longDescription": "Run mix compile --warnings-as-errors after editing Elixir files. Handles Claude Code edits and Codex patches in Mix projects. Requires Bash and Elixir/Mix on PATH.",
+    "developerName": "George Guimarães",
+    "category": "Developer Tools",
+    "capabilities": [],
+    "defaultPrompt": "Check this Elixir project with mix compile."
+  }
+}

@@ -10,7 +10,7 @@ fail() { echo "  ✗ $1"; ERRORS=$((ERRORS + 1)); }
 echo "=== Plugin Structure ==="
 
 # All expected plugins exist
-for plugin in elixir elixir-lsp mix-format mix-compile mix-credo; do
+for plugin in elixir-dev elixir-lsp mix-format mix-compile mix-credo; do
   if [ -f "$REPO_ROOT/plugins/$plugin/.claude-plugin/plugin.json" ]; then
     pass "$plugin plugin.json exists"
   else
@@ -34,7 +34,7 @@ echo ""
 echo "=== Plugin JSON Schema ==="
 
 # Each plugin.json has required fields
-for plugin in elixir elixir-lsp mix-format mix-compile mix-credo; do
+for plugin in elixir-dev elixir-lsp mix-format mix-compile mix-credo; do
   pjson="$REPO_ROOT/plugins/$plugin/.claude-plugin/plugin.json"
   for field in name version description; do
     if python3 -c "import json,sys; d=json.load(open('$pjson')); assert '$field' in d" 2>/dev/null; then
@@ -94,12 +94,10 @@ fi
 echo ""
 echo "=== Hook Scripts ==="
 
-# Hook scripts exist and are executable
 for script in \
-  "plugins/elixir/hooks/session-start.sh" \
-  "plugins/mix-format/hooks/format-elixir.sh" \
-  "plugins/mix-compile/hooks/compile-elixir.sh" \
-  "plugins/mix-credo/hooks/credo-elixir.sh"; do
+  "plugins/mix-format/hooks/mix-hook.sh" \
+  "plugins/mix-compile/hooks/mix-hook.sh" \
+  "plugins/mix-credo/hooks/mix-hook.sh"; do
 
   full="$REPO_ROOT/$script"
   if [ -f "$full" ]; then
@@ -116,8 +114,14 @@ for script in \
   fi
 done
 
+if bash "$REPO_ROOT/scripts/sync-mix-hooks.sh" --check; then
+  pass "All Mix plugins contain the current standalone Bash runtime and parser"
+else
+  fail "Mix hook bundles are out of date"
+fi
+
 # hooks.json files reference existing scripts
-for plugin in elixir mix-format mix-compile mix-credo; do
+for plugin in mix-format mix-compile mix-credo; do
   hjson="$REPO_ROOT/plugins/$plugin/hooks/hooks.json"
   if [ ! -f "$hjson" ]; then
     fail "$plugin hooks.json missing"
@@ -150,8 +154,8 @@ done
 echo ""
 echo "=== Skill Files ==="
 
-SKILLS_DIR="$REPO_ROOT/plugins/elixir/skills"
-for skill in using-elixir-skills elixir-thinking phoenix-thinking ecto-thinking otp-thinking oban-thinking; do
+SKILLS_DIR="$REPO_ROOT/plugins/elixir-dev/skills"
+for skill in elixir phoenix ecto otp oban; do
   skill_file="$SKILLS_DIR/$skill/SKILL.md"
   if [ -f "$skill_file" ]; then
     pass "$skill/SKILL.md exists"
@@ -185,6 +189,37 @@ if errors:
     sys.exit(1)
 " 2>/dev/null && pass "All marketplace entries match actual plugins" \
              || fail "Marketplace/plugin mismatch"
+
+echo ""
+echo "=== Codex Marketplace Consistency ==="
+
+if python3 - "$REPO_ROOT" <<'PY'
+import json
+import sys
+from pathlib import Path
+
+root = Path(sys.argv[1])
+marketplace = json.loads((root / '.agents/plugins/marketplace.json').read_text())
+assert marketplace['name'] == 'elixir-agent-tools'
+assert [entry['name'] for entry in marketplace['plugins']] == ['elixir-dev', 'mix-format', 'mix-compile', 'mix-credo']
+for entry in marketplace['plugins']:
+    assert entry['source']['source'] == 'local'
+    plugin_root = (root / entry['source']['path']).resolve()
+    assert plugin_root.is_relative_to(root.resolve())
+    codex = json.loads((plugin_root / '.codex-plugin/plugin.json').read_text())
+    claude = json.loads((plugin_root / '.claude-plugin/plugin.json').read_text())
+    assert entry['name'] == codex['name'] == claude['name']
+    assert codex['version'] == claude['version']
+    if entry['name'] == 'elixir-dev':
+        assert (plugin_root / codex['skills']).resolve() == plugin_root / 'skills'
+    else:
+        assert (plugin_root / 'hooks/hooks.json').is_file()
+PY
+then
+  pass "Codex catalog resolves all four shared plugins with matching versions"
+else
+  fail "Codex marketplace/plugin mismatch"
+fi
 
 echo ""
 echo "=== Results ==="

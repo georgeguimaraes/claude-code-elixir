@@ -1,0 +1,22 @@
+{
+  "name": "elixir-dev",
+  "version": "3.0.0",
+  "description": "Development guidance for Elixir, Phoenix, Ecto, OTP, and Oban",
+  "author": {
+    "name": "George Guimarães"
+  },
+  "homepage": "https://github.com/georgeguimaraes/elixir-agent-tools",
+  "license": "Apache-2.0",
+  "keywords": [
+    "elixir",
+    "phoenix",
+    "ecto",
+    "otp",
+    "oban",
+    "genserver",
+    "liveview",
+    "beam",
+    "architecture",
+    "patterns"
+  ]
+}

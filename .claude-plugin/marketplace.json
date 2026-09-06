@@ -1,13 +1,12 @@
 {
-  "name": "claude-code-elixir",
+  "name": "elixir-agent-tools",
   "owner": {
     "name": "George Guimaraes"
   },
   "metadata": {
-    "description": "Claude Code plugins for Elixir development",
-    "homepage": "https://github.com/georgeguimaraes/claude-code-elixir",
+    "description": "Elixir development skills with optional Mix checks and Expert language server integration",
     "pluginRoot": "./plugins",
-    "version": "3.1.0"
+    "version": "4.0.0"
   },
   "plugins": [
     {
@@ -15,35 +14,67 @@
       "source": "./plugins/elixir-lsp",
       "description": "Elixir Language Server integration for go-to-definition, references, and hover docs",
       "category": "lsp",
-      "keywords": ["elixir", "lsp", "language-server", "intellisense", "autocomplete"]
+      "keywords": [
+        "elixir",
+        "lsp",
+        "language-server",
+        "intellisense",
+        "autocomplete"
+      ]
     },
     {
-      "name": "elixir",
-      "source": "./plugins/elixir",
-      "description": "Thinking skills for Elixir, Phoenix, Ecto, OTP, and Oban patterns",
+      "name": "elixir-dev",
+      "source": "./plugins/elixir-dev",
+      "description": "Development guidance for Elixir, Phoenix, Ecto, OTP, and Oban",
       "category": "skills",
-      "keywords": ["elixir", "phoenix", "ecto", "otp", "oban", "liveview", "genserver"]
+      "keywords": [
+        "elixir",
+        "phoenix",
+        "ecto",
+        "otp",
+        "oban",
+        "liveview",
+        "genserver"
+      ]
     },
     {
       "name": "mix-compile",
       "source": "./plugins/mix-compile",
       "description": "Auto-compile Elixir files with warnings-as-errors after edits",
       "category": "hooks",
-      "keywords": ["elixir", "mix", "compile", "warnings", "errors"]
+      "keywords": [
+        "elixir",
+        "mix",
+        "compile",
+        "warnings",
+        "errors"
+      ]
     },
     {
       "name": "mix-format",
       "source": "./plugins/mix-format",
       "description": "Auto-format Elixir files with mix format after edits",
       "category": "hooks",
-      "keywords": ["elixir", "mix", "format", "formatting", "code-style"]
+      "keywords": [
+        "elixir",
+        "mix",
+        "format",
+        "formatting",
+        "code-style"
+      ]
     },
     {
       "name": "mix-credo",
       "source": "./plugins/mix-credo",
       "description": "Run Credo static analysis after editing Elixir files",
       "category": "hooks",
-      "keywords": ["elixir", "mix", "credo", "linting", "code-quality"]
+      "keywords": [
+        "elixir",
+        "mix",
+        "credo",
+        "linting",
+        "code-quality"
+      ]
     }
   ]
 }

@@ -6,8 +6,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/format-elixir.sh",
-            "timeout": 15000
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/mix-hook.sh\" format",
+            "timeout": 60
           }
         ]
       }

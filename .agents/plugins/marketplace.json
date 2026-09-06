@@ -1,0 +1,56 @@
+{
+  "name": "elixir-agent-tools",
+  "interface": {
+    "displayName": "Elixir Agent Tools"
+  },
+  "plugins": [
+    {
+      "name": "elixir-dev",
+      "source": {
+        "source": "local",
+        "path": "./plugins/elixir-dev"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Developer Tools"
+    },
+    {
+      "name": "mix-format",
+      "source": {
+        "source": "local",
+        "path": "./plugins/mix-format"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Developer Tools"
+    },
+    {
+      "name": "mix-compile",
+      "source": {
+        "source": "local",
+        "path": "./plugins/mix-compile"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Developer Tools"
+    },
+    {
+      "name": "mix-credo",
+      "source": {
+        "source": "local",
+        "path": "./plugins/mix-credo"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Developer Tools"
+    }
+  ]
+}

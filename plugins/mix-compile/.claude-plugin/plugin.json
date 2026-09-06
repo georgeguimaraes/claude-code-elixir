@@ -1,11 +1,15 @@
 {
   "name": "mix-compile",
-  "version": "1.1.0",
+  "version": "2.0.0",
   "description": "Run mix compile --warnings-as-errors after editing Elixir files",
   "author": {
     "name": "George Guimaraes"
   },
-  "homepage": "https://github.com/georgeguimaraes/claude-code-elixir",
+  "homepage": "https://github.com/georgeguimaraes/elixir-agent-tools",
   "license": "Apache-2.0",
-  "keywords": ["elixir", "mix-compile", "warnings-as-errors"]
+  "keywords": [
+    "elixir",
+    "mix-compile",
+    "warnings-as-errors"
+  ]
 }

@@ -1,0 +1,25 @@
+{
+  "name": "mix-credo",
+  "version": "2.0.0",
+  "description": "Run mix credo after editing Elixir files to check code quality",
+  "author": {
+    "name": "Wígny Almeida"
+  },
+  "homepage": "https://github.com/georgeguimaraes/elixir-agent-tools",
+  "license": "Apache-2.0",
+  "keywords": [
+    "elixir",
+    "credo",
+    "linter",
+    "code-quality"
+  ],
+  "interface": {
+    "displayName": "Mix Credo",
+    "shortDescription": "Run mix credo after editing Elixir files to check code quality",
+    "longDescription": "Run mix credo after editing Elixir files to check code quality. Handles Claude Code edits and Codex patches in Mix projects. Requires Bash and Elixir/Mix on PATH.",
+    "developerName": "George Guimarães",
+    "category": "Developer Tools",
+    "capabilities": [],
+    "defaultPrompt": "Check this Elixir project with mix credo."
+  }
+}

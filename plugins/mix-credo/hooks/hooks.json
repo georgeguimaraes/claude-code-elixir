@@ -6,9 +6,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/credo-elixir.sh",
-            "timeout": 30000,
-            "async": true
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/mix-hook.sh\" credo",
+            "timeout": 120
           }
         ]
       }

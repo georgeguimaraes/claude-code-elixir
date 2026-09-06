@@ -1,0 +1,30 @@
+{
+  "name": "elixir-dev",
+  "version": "3.0.0",
+  "description": "Development guidance for Elixir, Phoenix, Ecto, OTP, and Oban",
+  "author": {
+    "name": "George Guimarães"
+  },
+  "homepage": "https://github.com/georgeguimaraes/elixir-agent-tools",
+  "repository": "https://github.com/georgeguimaraes/elixir-agent-tools",
+  "license": "Apache-2.0",
+  "keywords": [
+    "elixir",
+    "phoenix",
+    "ecto",
+    "otp",
+    "oban",
+    "liveview",
+    "genserver"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Elixir Development",
+    "shortDescription": "Elixir, Phoenix, Ecto, OTP, and Oban development guidance",
+    "longDescription": "Five focused skills for Elixir language idioms, Phoenix interfaces, Ecto persistence, OTP processes, and Oban jobs.",
+    "developerName": "George Guimarães",
+    "category": "Developer Tools",
+    "capabilities": [],
+    "defaultPrompt": "Review this Elixir project and suggest improvements."
+  }
+}

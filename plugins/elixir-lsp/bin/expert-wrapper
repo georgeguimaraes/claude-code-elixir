@@ -3,7 +3,7 @@
 
 Workaround for Claude Code not handling server-initiated requests.
 Upstream: https://github.com/anthropics/claude-code/issues/32595
-Context: https://github.com/georgeguimaraes/claude-code-elixir/issues/6
+Context: https://github.com/georgeguimaraes/elixir-agent-tools/issues/6
 
 Claude Code doesn't respond to server->client requests (messages with both
 "id" and "method" fields). This wrapper intercepts them, sends back a success
